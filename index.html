@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plataforma de Projetos</title>
     
-    <!-- Link para o PWA -->
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
     <meta name="theme-color" content="#0056b3">
@@ -24,19 +23,46 @@
         <aside id="sidebar" class="desktop-only">
             <nav>
                 <ul>
-                    <li><a href="#comunidades">Minhas Comunidades</a></li>
-                    <li><a href="#projetos">Projetos Avulsos</a></li>
-                    <li id="admin-panel-link" style="display: none;"><a href="#admin">Painel de Controle</a></li>
+                    <li><a href="#comunidades" id="nav-comunidades">Minhas Comunidades</a></li>
+                    <li><a href="#projetos" id="nav-projetos">Projetos Avulsos</a></li>
+                    <li id="admin-panel-link" style="display: none;"><a href="#admin" id="nav-admin">Painel de Controle</a></li>
                 </ul>
             </nav>
         </aside>
 
         <section id="content-area">
+            <!-- Área de Visualização do Usuário -->
             <div id="dynamic-content">
                 <h2>Bem-vindo à plataforma</h2>
                 <p>Faça login com seu e-mail para acessar seus projetos.</p>
             </div>
             
+            <!-- Painel de Controle (Admin/Produtor) -->
+            <div id="admin-panel" class="hidden">
+                <h2>Painel de Controle</h2>
+                <p>Gerencie suas comunidades e projetos abaixo.</p>
+                
+                <div class="admin-form-container">
+                    <h3>1. Criar Nova Comunidade</h3>
+                    <form id="form-comunidade">
+                        <input type="text" id="comunidade-nome" placeholder="Nome da Comunidade (ex: Turma 2026)" required>
+                        <textarea id="comunidade-desc" placeholder="Descrição da comunidade" required></textarea>
+                        <button type="submit">Salvar Comunidade</button>
+                    </form>
+                </div>
+
+                <div class="admin-form-container">
+                    <h3>2. Criar Novo Projeto (Módulo)</h3>
+                    <form id="form-projeto">
+                        <input type="text" id="projeto-titulo" placeholder="Título do Projeto (ex: Módulo 1 - Matemática)" required>
+                        <input type="text" id="projeto-id-comunidade" placeholder="ID da Comunidade" required>
+                        <input type="url" id="projeto-url" placeholder="URL do PDF (Link público)" required>
+                        <button type="submit">Salvar Projeto</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Leitor de PDF -->
             <div id="pdf-viewer-container" class="hidden">
                 <div class="pdf-controls">Controles do PDF</div>
                 <div class="pdf-canvas">Área do Documento</div>
@@ -49,7 +75,6 @@
         <ul>
             <li><a href="#comunidades">Comunidades</a></li>
             <li><a href="#projetos">Projetos</a></li>
-            <li id="mobile-admin-panel-link" style="display: none;"><a href="#admin">Painel</a></li>
         </ul>
     </nav>
 
