@@ -15,7 +15,7 @@
         
         <aside id="sidebar" class="desktop-only hidden expanded">
             <div class="sidebar-header">
-                <h2 class="sidebar-logo"><span class="icon">🚀</span><span class="text">Plataforma</span></h2>
+                <h2 class="sidebar-logo" id="logo-home-sidebar" style="cursor: pointer;"><span class="icon">🚀</span><span class="text">Plataforma</span></h2>
                 <button id="sidebar-toggle" title="Recolher/Expandir Menu">☰</button>
             </div>
             <nav>
@@ -25,7 +25,6 @@
                     <li><a href="#projetos" id="nav-projetos" title="Meus Projetos"><span class="icon">📂</span> <span class="text">Meus Projetos</span></a></li>
                     <li id="admin-panel-link" class="hidden"><a href="#admin" id="nav-admin" title="Painel de Controle"><span class="icon">⚙️</span> <span class="text">Painel</span></a></li>
                 </ul>
-                <!-- Lista Dinâmica de Comunidades -->
                 <ul id="sidebar-dynamic-section">
                     <li class="sidebar-divider"></li>
                     <li class="sidebar-title"><span class="text">MINHAS COMUNIDADES</span></li>
@@ -40,7 +39,7 @@
             
             <header class="navbar">
                 <div class="navbar-content">
-                    <h1 class="mobile-only" style="color: var(--primary-color); font-size: 1.2rem;">Plataforma</h1>
+                    <h1 id="logo-home-mobile" class="mobile-only" style="color: var(--primary-color); font-size: 1.2rem; cursor: pointer;">Plataforma</h1>
                     <div class="desktop-only"></div>
                     <div id="user-info">
                         <div class="user-details">
@@ -77,7 +76,6 @@
                         </div>
                     </div>
 
-                    <!-- Feed Global -->
                     <div id="global-feed-view" class="hidden">
                         <h2 class="page-title">Meu Feed</h2>
                         <p class="page-subtitle">Últimas atualizações dos seus projetos.</p>
@@ -87,21 +85,18 @@
                         <button id="btn-load-more" class="btn-secondary hidden" style="width: 100%; margin-top: 20px;">Carregar mais 10 postagens</button>
                     </div>
 
-                    <!-- Vitrine de Comunidades -->
                     <div id="dynamic-content" class="hidden">
                         <h2 id="dynamic-title" class="page-title">Explorar Comunidades</h2>
                         <p id="dynamic-subtitle" class="page-subtitle">Encontre novas comunidades para participar.</p>
                         <div id="communities-container"></div>
                     </div>
 
-                    <!-- Meus Projetos -->
                     <div id="my-projects-view" class="hidden">
                         <h2 class="page-title">Meus Projetos</h2>
                         <p class="page-subtitle">Módulos organizados pela sua função na plataforma.</p>
                         <div id="my-projects-container"></div>
                     </div>
 
-                    <!-- Feed do Projeto -->
                     <div id="project-view" class="hidden">
                         <div class="feed-header">
                             <div class="feed-photo-container">
@@ -131,13 +126,11 @@
                         </div>
                     </div>
                     
-                    <!-- Painel de Controle -->
                     <div id="admin-panel" class="hidden">
                         <h2 class="page-title">Painel de Controle</h2>
                         <p class="page-subtitle">Gerenciamento inteligente de conteúdo.</p>
                         
                         <div id="tools-produtor" class="hidden">
-                            <!-- CRIAR COMUNIDADE -->
                             <div class="admin-form-container">
                                 <h3>Criar Nova Comunidade</h3>
                                 <form id="form-comunidade">
@@ -151,7 +144,6 @@
                                 </form>
                             </div>
 
-                            <!-- EDITAR COMPLETO COMUNIDADE -->
                             <div class="admin-form-container" style="border: 2px solid var(--primary-color);">
                                 <h3 style="color: var(--primary-color);">Editar Comunidade Existente</h3>
                                 <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 10px;">Ajuste dados, gerencie múltiplos admins ou transfira a propriedade da comunidade.</p>
@@ -177,7 +169,6 @@
                             </div>
                         </div>
 
-                        <!-- Solicitações -->
                         <div id="join-requests-container" class="admin-form-container">
                             <h3>Solicitações de Entrada</h3>
                             <div id="requests-list" class="users-list">
