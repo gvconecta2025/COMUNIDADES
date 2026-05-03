@@ -12,7 +12,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // =========================================================
-// CONFIGURAÇÃO DO FIREBASE (Colocaremos os dados reais depois)
+// CONFIGURAÇÃO DO FIREBASE 
 // =========================================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -20,12 +20,13 @@ import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https:/
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "SUA_API_KEY",
-    authDomain: "SEU_PROJETO.firebaseapp.com",
-    projectId: "SEU_PROJETO",
-    storageBucket: "SEU_PROJETO.appspot.com",
-    messagingSenderId: "ID",
-    appId: "APP_ID"
+  apiKey: "AIzaSyAy6KKgoKOfpSeSw0rxk--AGdTvq0Y1L3M",
+  authDomain: "comunidades-e2f59.firebaseapp.com",
+  projectId: "comunidades-e2f59",
+  storageBucket: "comunidades-e2f59.firebasestorage.app",
+  messagingSenderId: "923980743186",
+  appId: "1:923980743186:web:1c560e5a14e6b409650ecb",
+  measurementId: "G-YLC6X0CCVD"
 };
 
 // Inicializa o Firebase
@@ -69,7 +70,8 @@ async function carregarPerfilUsuario(uid) {
 
             dynamicContent.innerHTML = `<h2>Área de Projetos</h2><p>Carregando os módulos que você possui acesso...</p>`;
         } else {
-            dynamicContent.innerHTML = `<h2>Erro</h2><p>Usuário não encontrado no banco de dados. Fale com o administrador.</p>`;
+            // Se o usuário logar mas não tiver documento no Firestore ainda
+            dynamicContent.innerHTML = `<h2>Acesso Restrito</h2><p>Sua conta existe, mas você ainda não possui permissões ou módulos liberados.</p>`;
         }
     } catch (error) {
         console.error("Erro ao carregar perfil:", error);
