@@ -1,0 +1,128 @@
+/* Variáveis e Reset */
+:root {
+    --primary-color: #0056b3;
+    --bg-color: #f4f4f4;
+    --text-color: #333;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Header */
+.navbar {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar button {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+/* Container Principal */
+#app-container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+#content-area {
+    flex: 1;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+/* --- ESTRUTURA DESKTOP (Computador) --- */
+@media (min-width: 769px) {
+    .mobile-only {
+        display: none;
+    }
+
+    #sidebar {
+        width: 250px;
+        background-color: #fff;
+        border-right: 1px solid #ddd;
+        padding: 1rem;
+    }
+
+    #sidebar ul {
+        list-style: none;
+    }
+
+    #sidebar ul li {
+        margin-bottom: 1rem;
+    }
+
+    #sidebar ul li a {
+        text-decoration: none;
+        color: var(--primary-color);
+        font-weight: bold;
+    }
+}
+
+/* --- ESTRUTURA MOBILE (Celular) --- */
+@media (max-width: 768px) {
+    .desktop-only {
+        display: none;
+    }
+
+    #content-area {
+        padding: 1rem;
+        padding-bottom: 70px; /* Espaço para o menu inferior não cobrir o texto */
+    }
+
+    #mobile-bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: #fff;
+        border-top: 1px solid #ddd;
+        display: flex;
+        justify-content: space-around;
+        padding: 1rem 0;
+        z-index: 1000;
+    }
+
+    #mobile-bottom-nav ul {
+        display: flex;
+        width: 100%;
+        justify-content: space-around;
+        list-style: none;
+    }
+
+    #mobile-bottom-nav ul li a {
+        text-decoration: none;
+        color: var(--primary-color);
+        font-weight: bold;
+    }
+
+    /* Ajuste do PDF para celular */
+    #pdf-viewer-container {
+        display: flex;
+        flex-direction: column;
+    }
+}
