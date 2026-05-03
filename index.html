@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma de Projetos</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
+    <meta name="theme-color" content="#0056b3">
+</head>
+<body>
+    <header class="navbar">
+        <h1>Plataforma</h1>
+        <div id="user-info">
+            <span id="user-email">Não logado</span>
+            <button id="login-btn">Entrar</button>
+        </div>
+    </header>
+
+    <main id="app-container">
+        
+        <aside id="sidebar" class="desktop-only">
+            <nav>
+                <ul>
+                    <li><a href="#comunidades">Minhas Comunidades</a></li>
+                    <li><a href="#projetos">Projetos Avulsos</a></li>
+                    <li id="admin-panel-link" style="display: none;"><a href="#admin">Painel de Controle</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <section id="content-area">
+            <div id="dynamic-content">
+                <h2>Bem-vindo à plataforma</h2>
+                <p>Faça login com seu e-mail para acessar seus projetos.</p>
+            </div>
+            
+            <div id="pdf-viewer-container" class="hidden">
+                <div class="pdf-controls">Controles do PDF</div>
+                <div class="pdf-canvas">Área do Documento</div>
+            </div>
+        </section>
+
+    </main>
+
+    <nav id="mobile-bottom-nav" class="mobile-only">
+        <ul>
+            <li><a href="#comunidades">Comunidades</a></li>
+            <li><a href="#projetos">Projetos</a></li>
+        </ul>
+    </nav>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
