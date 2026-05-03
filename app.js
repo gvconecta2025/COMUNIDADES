@@ -48,11 +48,11 @@ const authContainer = document.getElementById('auth-container');
 const loginBox = document.getElementById('login-box');
 const registerBox = document.getElementById('register-box');
 const dynamicContent = document.getElementById('dynamic-content');
+const myProjectsView = document.getElementById('my-projects-view');
+const myProjectsContainer = document.getElementById('my-projects-container');
 const projectView = document.getElementById('project-view');
 const adminPanel = document.getElementById('admin-panel');
 const communitiesContainer = document.getElementById('communities-container');
-const dynamicTitle = document.getElementById('dynamic-title');
-const dynamicSubtitle = document.getElementById('dynamic-subtitle');
 
 const feedTitle = document.getElementById('feed-title');
 const feedDesc = document.getElementById('feed-desc');
@@ -74,12 +74,15 @@ document.getElementById('nav-admin').addEventListener('click', (e) => {
 document.getElementById('nav-comunidades').addEventListener('click', (e) => { 
     e.preventDefault(); esconderTelas(); dynamicContent.classList.remove('hidden'); carregarVitrineComunidades(); 
 });
-document.getElementById('nav-projetos').addEventListener('click', (e) => { e.preventDefault(); alert("Função em desenvolvimento."); });
+document.getElementById('nav-projetos').addEventListener('click', (e) => { 
+    e.preventDefault(); esconderTelas(); myProjectsView.classList.remove('hidden'); carregarMeusProjetos(); 
+});
 
 function esconderTelas() {
     dynamicContent.classList.add('hidden');
     adminPanel.classList.add('hidden');
     projectView.classList.add('hidden');
+    myProjectsView.classList.add('hidden');
 }
 
 // Observador de Estado
@@ -170,11 +173,9 @@ document.getElementById('form-register').addEventListener('submit', async (e) =>
 logoutBtn.addEventListener('click', () => { signOut(auth); });
 
 // -----------------------------------------
-// VITRINE E FEED
+// VITRINE E ABA "MEUS PROJETOS"
 // -----------------------------------------
 async function carregarVitrineComunidades() {
-    dynamicTitle.textContent = "Comunidades";
-    dynamicSubtitle.textContent = "Acesse ou explore novas comunidades.";
     communitiesContainer.innerHTML = '<p class="loading-text">Buscando...</p>';
     
     try {
@@ -224,8 +225,9 @@ async function carregarVitrineComunidades() {
 }
 
 window.listarProjetosDaComunidade = async (comId, comNome) => {
-    dynamicTitle.textContent = "Projetos em: " + comNome;
-    dynamicSubtitle.textContent = "Selecione o feed que deseja acessar.";
+    esconderTelas(); dynamicContent.classList.remove('hidden');
+    document.getElementById('dynamic-title').textContent = "Projetos em: " + comNome;
+    document.getElementById('dynamic-subtitle').textContent = "Selecione o feed que deseja acessar.";
     communitiesContainer.innerHTML = '<p class="loading-text">Buscando projetos...</p>';
     
     try {
@@ -246,6 +248,67 @@ window.listarProjetosDaComunidade = async (comId, comNome) => {
     } catch (error) { console.error(error); }
 };
 
+async function carregarMeusProjetos() {
+    myProjectsContainer.innerHTML = '<p class="loading-text">Buscando seus projetos...</p>';
+    
+    try {
+        const comSnapshot = await getDocs(collection(db, "comunidades"));
+        let minhasComunidades = { admin: [], membro: [] };
+        const arraysUsuario = { acesso: currentUserData?.acesso_comunidades || [], seguindo: currentUserData?.seguindo_comunidades || [] };
+
+        comSnapshot.forEach(doc => {
+            const data = doc.data();
+            const id = doc.id;
+            let isCriador = data.id_criador === auth.currentUser.uid;
+            let isAdmin = data.admins_emails && data.admins_emails.includes(auth.currentUser.email);
+            let isMembro = arraysUsuario.acesso.includes(id) || arraysUsuario.seguindo.includes(id);
+
+            if (isCriador || isAdmin || currentUserRole === 'programador') minhasComunidades.admin.push(id);
+            else if (isMembro) minhasComunidades.membro.push(id);
+        });
+
+        const projSnapshot = await getDocs(collection(db, "projetos"));
+        let projetosAdmin = [];
+        let projetosMembro = [];
+
+        projSnapshot.forEach(doc => {
+            const data = doc.data();
+            if (minhasComunidades.admin.includes(data.id_comunidade)) projetosAdmin.push({id: doc.id, data});
+            else if (minhasComunidades.membro.includes(data.id_comunidade)) projetosMembro.push({id: doc.id, data});
+        });
+
+        myProjectsContainer.innerHTML = '';
+        const renderGrid = (titulo, lista) => {
+            if(lista.length === 0) return '';
+            let html = `<div class="category-section"><h3 class="category-title">${titulo}</h3><div class="community-grid">`;
+            lista.forEach(p => {
+                html += `
+                <div class="community-card">
+                    <div><h3>${p.data.titulo}</h3><p>${p.data.descricao || ''}</p></div>
+                    <button onclick="abrirFeedProjeto('${p.id}')">Acessar Feed</button>
+                </div>`;
+            });
+            html += `</div></div>`;
+            return html;
+        };
+
+        if (projetosAdmin.length === 0 && projetosMembro.length === 0) {
+            myProjectsContainer.innerHTML = '<p class="loading-text">Você ainda não possui projetos ativos.</p>';
+            return;
+        }
+
+        myProjectsContainer.innerHTML += renderGrid("Meus Conteúdos (Gestão)", projetosAdmin);
+        myProjectsContainer.innerHTML += renderGrid("Projetos que Participo", projetosMembro);
+
+    } catch(error) {
+        myProjectsContainer.innerHTML = '<p>Erro ao carregar projetos.</p>';
+        console.error(error);
+    }
+}
+
+// -----------------------------------------
+// FEED E POSTAGENS
+// -----------------------------------------
 window.abrirFeedProjeto = async (projId) => {
     esconderTelas(); projectView.classList.remove('hidden'); currentProjetoId = projId;
     postsFeed.innerHTML = '<p class="loading-text">Carregando postagens...</p>';
@@ -278,9 +341,6 @@ btnEditPhoto.addEventListener('click', async () => {
     }
 });
 
-// -----------------------------------------
-// POSTAGENS E COMENTÁRIOS
-// -----------------------------------------
 document.getElementById('form-post').addEventListener('submit', async (e) => {
     e.preventDefault();
     const texto = document.getElementById('post-text').value;
@@ -387,7 +447,7 @@ function processarTextoLinks(texto) {
 }
 
 // -----------------------------------------
-// PAINEL DE CONTROLE (GRAVAÇÕES E GESTÃO)
+// PAINEL DE CONTROLE E GESTÃO
 // -----------------------------------------
 document.getElementById('form-comunidade').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -414,7 +474,6 @@ document.getElementById('form-projeto').addEventListener('submit', async (e) => 
     } catch (error) { alert("Erro: " + error.message); } finally { btn.textContent = 'Salvar Projeto'; btn.disabled = false; }
 });
 
-// MOTOR DE EDIÇÃO E EXCLUSÃO GERAL
 window.excluirDocumento = async (colecao, idDoc, refReloadId = null) => {
     if(confirm("Tem certeza que deseja excluir permanentemente este item?")) {
         try {
@@ -469,7 +528,6 @@ async function carregarListaGerenciamento() {
     } catch (error) { managementList.innerHTML = '<p>Erro ao carregar dados.</p>'; }
 }
 
-// GESTÃO MASTER DE USUÁRIOS
 async function carregarListaDeUsuarios() {
     try {
         const querySnapshot = await getDocs(collection(db, "users"));
