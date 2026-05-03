@@ -32,7 +32,6 @@
 
         <section id="content-area">
             
-            <!-- Tela de Autenticação (Login / Cadastro) -->
             <div id="auth-container">
                 <div id="login-box" class="auth-box">
                     <h2>Login</h2>
@@ -55,13 +54,11 @@
                 </div>
             </div>
 
-            <!-- Área de Visualização do Usuário -->
             <div id="dynamic-content" class="hidden">
                 <h2>Bem-vindo à plataforma</h2>
                 <p>Carregando seus módulos...</p>
             </div>
             
-            <!-- Painel de Controle (Programador/Produtor/Admin) -->
             <div id="admin-panel" class="hidden">
                 <h2>Painel de Controle</h2>
                 <p>Gerenciamento da plataforma.</p>
@@ -85,20 +82,13 @@
                     </form>
                 </div>
 
-                <!-- Exclusivo para Programador -->
+                <!-- Gestão de Usuários (Exclusivo Programador) -->
                 <div id="master-admin-tools" class="admin-form-container hidden">
-                    <h3>Gestão de Níveis de Acesso</h3>
-                    <p style="font-size: 0.9rem; margin-bottom: 10px; color: #555;">Pegue o UID do usuário no Firebase Authentication para elevar o nível dele.</p>
-                    <form id="form-role">
-                        <input type="text" id="role-uid" placeholder="UID do Usuário" required>
-                        <select id="role-select">
-                            <option value="usuario">4 - Usuário Comum</option>
-                            <option value="admin">3 - Administrador de Comunidade</option>
-                            <option value="produtor">2 - Produtor (Dono)</option>
-                            <option value="programador">1 - Programador (Master)</option>
-                        </select>
-                        <button type="submit">Atualizar Nível</button>
-                    </form>
+                    <h3>Gestão de Usuários e Acessos</h3>
+                    <input type="text" id="search-user" class="search-input" placeholder="Pesquisar usuário por e-mail...">
+                    <div id="users-list-container" class="users-list">
+                        <!-- Lista injetada pelo JS -->
+                    </div>
                 </div>
             </div>
 
