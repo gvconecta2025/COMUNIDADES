@@ -54,11 +54,13 @@
                 </div>
             </div>
 
-            <!-- Vitrine de Comunidades -->
+            <!-- Vitrine de Comunidades Categorizada -->
             <div id="dynamic-content" class="hidden">
-                <h2 id="dynamic-title">Explorar Comunidades</h2>
-                <p id="dynamic-subtitle">Confira as comunidades disponíveis na plataforma.</p>
-                <div id="community-grid" class="community-grid"></div>
+                <h2 id="dynamic-title">Comunidades</h2>
+                <p id="dynamic-subtitle">Acesse ou explore novas comunidades na plataforma.</p>
+                <div id="communities-container">
+                    <!-- As seções serão injetadas aqui pelo JS -->
+                </div>
             </div>
 
             <!-- Feed do Projeto -->
@@ -78,7 +80,6 @@
                     </div>
                 </div>
 
-                <!-- Formulário de Nova Postagem (Oculto para usuários comuns) -->
                 <div id="post-creator" class="admin-form-container hidden">
                     <form id="form-post">
                         <textarea id="post-text" placeholder="O que você quer compartilhar na comunidade? Cole links de vídeos ou imagens aqui." required></textarea>
@@ -86,7 +87,6 @@
                     </form>
                 </div>
 
-                <!-- Lista de Postagens -->
                 <div id="posts-feed" class="posts-feed">
                     <p>Carregando postagens...</p>
                 </div>
