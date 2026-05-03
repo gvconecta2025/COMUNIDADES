@@ -19,16 +19,15 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Referências Globais
 let currentUserRole = 'usuario';
 let currentUserData = null; 
 let currentProjetoId = null;
 let allUsersData = []; 
-let globalFeedPosts = []; // Armazena posts do feed global
+let globalFeedPosts = []; 
 let feedPageSize = 10;
 let feedCurrentIndex = 0;
 
-// Lógica Sidebar
+// Sidebar Toggle
 const sidebar = document.getElementById('sidebar');
 const sidebarToggle = document.getElementById('sidebar-toggle');
 if(sidebarToggle && sidebar) {
@@ -38,15 +37,16 @@ if(sidebarToggle && sidebar) {
     });
 }
 
-// Elementos UI Globais
+// UI Globais
 const userNameSpan = document.getElementById('user-name');
+const userBadgesDiv = document.getElementById('user-badges');
 const authContainer = document.getElementById('auth-container');
 const loginBox = document.getElementById('login-box');
 const registerBox = document.getElementById('register-box');
 
 // Telas
 const globalFeedView = document.getElementById('global-feed-view');
-const dynamicContent = document.getElementById('dynamic-content'); // Vitrine
+const dynamicContent = document.getElementById('dynamic-content'); 
 const myProjectsView = document.getElementById('my-projects-view');
 const projectView = document.getElementById('project-view');
 const adminPanel = document.getElementById('admin-panel');
@@ -57,11 +57,10 @@ const communitiesContainer = document.getElementById('communities-container');
 const myProjectsContainer = document.getElementById('my-projects-container');
 const requestsList = document.getElementById('requests-list');
 
-// Toggles de Menus (Auth)
+// Formulários Auth
 document.getElementById('link-show-register').addEventListener('click', (e) => { e.preventDefault(); loginBox.classList.add('hidden'); registerBox.classList.remove('hidden'); });
 document.getElementById('link-show-login').addEventListener('click', (e) => { e.preventDefault(); registerBox.classList.add('hidden'); loginBox.classList.remove('hidden'); });
 
-// Toggles de Menus (Navegação)
 function esconderTelas() {
     globalFeedView.classList.add('hidden');
     dynamicContent.classList.add('hidden');
@@ -73,7 +72,7 @@ function esconderTelas() {
 const navSetup = [
     { id: 'nav-feed', mobId: 'mob-nav-feed', action: () => { esconderTelas(); globalFeedView.classList.remove('hidden'); carregarFeedGlobal(); } },
     { id: 'nav-comunidades', mobId: 'mob-nav-comunidades', action: () => { esconderTelas(); dynamicContent.classList.remove('hidden'); carregarVitrineComunidades(); } },
-    { id: 'nav-projetos', mobId: 'mob-nav-projetos', action: () => { esconderTelas(); myProjectsView.classList.remove('hidden'); carregarMeusAcessos(); } },
+    { id: 'nav-projetos', mobId: 'mob-nav-projetos', action: () => { esconderTelas(); myProjectsView.classList.remove('hidden'); carregarMeusProjetos(); } },
     { id: 'nav-admin', action: () => { esconderTelas(); adminPanel.classList.remove('hidden'); carregarListaGerenciamento(); carregarSolicitacoes(); } }
 ];
 
@@ -82,7 +81,7 @@ navSetup.forEach(nav => {
     if(nav.mobId && document.getElementById(nav.mobId)) document.getElementById(nav.mobId).addEventListener('click', (e) => { e.preventDefault(); nav.action(); });
 });
 
-// Observador de Estado
+// Observador Auth
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         document.getElementById('logout-btn').classList.remove('hidden');
@@ -92,12 +91,12 @@ onAuthStateChanged(auth, async (user) => {
         
         await carregarPerfilUsuario(user.uid, user.email);
         
-        // Tela inicial ao logar: Feed
         esconderTelas();
         globalFeedView.classList.remove('hidden');
         carregarFeedGlobal();
     } else {
         userNameSpan.textContent = 'Não logado';
+        userBadgesDiv.innerHTML = '';
         document.getElementById('logout-btn').classList.add('hidden');
         document.getElementById('sidebar').classList.add('hidden');
         document.getElementById('mobile-bottom-nav').classList.add('hidden');
@@ -115,17 +114,14 @@ async function carregarPerfilUsuario(uid, email) {
             currentUserData = userDoc.data();
             currentUserRole = currentUserData.role;
             
-            // Lógica do Nome
             let nomeDisplay = currentUserData.nome;
             if(!nomeDisplay) {
                 nomeDisplay = email.split('@')[0];
-                // Atualiza o banco silenciosamente com o nome padrão
                 await updateDoc(userDocRef, { nome: nomeDisplay });
                 currentUserData.nome = nomeDisplay;
             }
             userNameSpan.textContent = `Olá, ${nomeDisplay}`;
 
-            // Liberação de Paineis
             if (currentUserRole !== 'usuario') {
                 document.getElementById('admin-panel-link').classList.remove('hidden');
                 document.getElementById('mobile-admin-panel-link').classList.remove('hidden');
@@ -146,9 +142,28 @@ async function carregarPerfilUsuario(uid, email) {
     } catch (error) { console.error(error); }
 }
 
-// -----------------------------------------
-// AUTENTICAÇÃO E CADASTRO
-// -----------------------------------------
+// Resolve visualmente as Badges do Usuário com base no banco e interações
+async function resolverBadgesUsuario() {
+    let bHTML = '';
+    if(currentUserRole === 'programador') {
+        bHTML += '<div class="badge-role">👨‍💻 Programador Master</div>';
+    } else {
+        let isProdutor = false; let isAdmin = false; let isAluno = false;
+        const snap = await getDocs(collection(db, "comunidades"));
+        snap.forEach(doc => {
+            const data = doc.data();
+            if(data.id_criador === auth.currentUser.uid) isProdutor = true;
+            if(data.admins_emails && data.admins_emails.includes(auth.currentUser.email)) isAdmin = true;
+            if(currentUserData?.acesso_comunidades?.includes(doc.id)) isAluno = true;
+        });
+
+        if(isProdutor || currentUserRole === 'produtor') bHTML += '<div class="badge-role">🎬 Produtor</div>';
+        if(isAdmin) bHTML += '<div class="badge-role">🛡️ Administrador</div>';
+        if(isAluno || currentUserRole === 'usuario') bHTML += '<div class="badge-role">👤 Aluno / Membro</div>';
+    }
+    userBadgesDiv.innerHTML = bHTML;
+}
+
 document.getElementById('form-login').addEventListener('submit', (e) => {
     e.preventDefault();
     const btn = e.target.querySelector('button'); btn.textContent = 'Aguarde...';
@@ -164,7 +179,6 @@ document.getElementById('form-register').addEventListener('submit', async (e) =>
         const userCredential = await createUserWithEmailAndPassword(auth, emailStr, document.getElementById('reg-pass').value);
         let cargoInicial = 'usuario';
         
-        // Verifica se é admin pré-cadastrado
         const q = query(collection(db, "comunidades"), where("admins_emails", "array-contains", emailStr));
         if (!(await getDocs(q)).empty) cargoInicial = 'admin'; 
 
@@ -189,13 +203,13 @@ async function carregarFeedGlobal() {
     feedCurrentIndex = 0;
     
     try {
-        // 1. Descobrir projetos que o usuario tem acesso
+        resolverBadgesUsuario(); // Aproveita pra resolver os crachás do usuário
+        
         let meusProjetosIds = [];
-        let nomesProjetos = {}; // Para mostrar a tag no feed
+        let nomesProjetos = {}; 
 
         const arraysUsuario = { acesso: currentUserData?.acesso_comunidades || [] };
         
-        // Pega as comunidades que tem acesso total ou é admin
         const comSnapshot = await getDocs(collection(db, "comunidades"));
         let comunidadesPermitidas = [];
         comSnapshot.forEach(doc => {
@@ -221,7 +235,6 @@ async function carregarFeedGlobal() {
             return;
         }
 
-        // 2. Buscar postagens (Limitamos a 100 no BD para economizar banda, filtramos no JS e paginamos de 10 em 10)
         const qPosts = query(collection(db, "postagens"), orderBy("data_hora", "desc"), limit(100));
         const snapPosts = await getDocs(qPosts);
         
@@ -241,22 +254,17 @@ async function carregarFeedGlobal() {
         globalPostsContainer.innerHTML = '';
         renderizarLoteFeed();
 
-    } catch(error) {
-        console.error(error);
-        globalPostsContainer.innerHTML = '<p>Erro ao carregar o feed global.</p>';
-    }
+    } catch(error) { globalPostsContainer.innerHTML = '<p>Erro ao carregar o feed.</p>'; }
 }
 
 function renderizarLoteFeed() {
     const lote = globalFeedPosts.slice(feedCurrentIndex, feedCurrentIndex + feedPageSize);
-    
     lote.forEach(post => {
         const dataFormatada = new Date(post.data_hora).toLocaleString('pt-BR');
         const textoFormatado = processarTextoLinks(post.texto);
         const imgHtml = post.imagem_url ? `<img src="${post.imagem_url}" class="post-media">` : '';
         
-        const card = document.createElement('div');
-        card.className = 'post-card';
+        const card = document.createElement('div'); card.className = 'post-card';
         card.innerHTML = `
             <div class="post-header">
                 <div class="post-meta"><b>${post.autor_email.split('@')[0]}</b> <span class="projeto-tag">${post.nome_projeto}</span><br>${dataFormatada}</div>
@@ -269,25 +277,16 @@ function renderizarLoteFeed() {
     });
 
     feedCurrentIndex += feedPageSize;
-
-    if (feedCurrentIndex < globalFeedPosts.length) {
-        document.getElementById('btn-load-more').classList.remove('hidden');
-    } else {
-        document.getElementById('btn-load-more').classList.add('hidden');
-        if(globalFeedPosts.length > 0) {
-            globalPostsContainer.innerHTML += '<p style="text-align:center; color: var(--text-light); margin-top: 20px;">Você chegou ao fim das novidades.</p>';
-        }
-    }
+    if (feedCurrentIndex < globalFeedPosts.length) document.getElementById('btn-load-more').classList.remove('hidden');
+    else { document.getElementById('btn-load-more').classList.add('hidden'); if(globalFeedPosts.length > 0) globalPostsContainer.innerHTML += '<p style="text-align:center; color: var(--text-light); margin-top: 20px;">Você chegou ao fim das novidades.</p>'; }
 }
-
 document.getElementById('btn-load-more').addEventListener('click', renderizarLoteFeed);
 
 // -----------------------------------------
-// 2. EXPLORAR (VITRINE E PORTARIA)
+// 2. EXPLORAR E ACESSOS
 // -----------------------------------------
 async function carregarVitrineComunidades() {
     communitiesContainer.innerHTML = '<p class="loading-text">Buscando...</p>';
-    
     try {
         const querySnapshot = await getDocs(collection(db, "comunidades"));
         communitiesContainer.innerHTML = '';
@@ -301,9 +300,8 @@ async function carregarVitrineComunidades() {
             let isAdmin = data.admins_emails && data.admins_emails.includes(auth.currentUser.email);
             let isMembro = arraysUsuario.acesso.includes(id);
 
-            // Só mostramos o que ele NÃO faz parte na aba Explorar
             if (!isCriador && !isAdmin && !isMembro && currentUserRole !== 'programador') {
-                const visibilidade = data.visibilidade || 'publico'; // fallback
+                const visibilidade = data.visibilidade || 'publico'; 
                 const badge = visibilidade === 'privado' ? '<span class="badge-private">Privada</span>' : '';
                 const btnAction = visibilidade === 'publico' 
                     ? `<button onclick="ingressarComunidade('${id}')">Ingressar Agora</button>`
@@ -316,72 +314,53 @@ async function carregarVitrineComunidades() {
                     </div>`;
             }
         });
-
-        if(communitiesContainer.innerHTML === '') {
-            communitiesContainer.innerHTML = '<p class="loading-text">Você já participa de todas as comunidades disponíveis!</p>';
-        }
-
-    } catch (error) { console.error(error); }
+        if(communitiesContainer.innerHTML === '') communitiesContainer.innerHTML = '<p class="loading-text">Você já participa de todas as comunidades disponíveis!</p>';
+    } catch (error) {}
 }
 
 window.ingressarComunidade = async (comId) => {
     try {
-        await updateDoc(doc(db, "users", auth.currentUser.uid), {
-            acesso_comunidades: arrayUnion(comId)
-        });
+        await updateDoc(doc(db, "users", auth.currentUser.uid), { acesso_comunidades: arrayUnion(comId) });
         alert("Sucesso! Você agora é membro desta comunidade.");
-        // Atualiza perfil local e recarrega vitrine
         currentUserData.acesso_comunidades.push(comId);
-        carregarVitrineComunidades();
+        carregarVitrineComunidades(); resolverBadgesUsuario();
     } catch (error) { alert("Erro ao ingressar."); }
 };
 
 window.solicitarAcesso = async (comId, comNome, idCriador) => {
     try {
-        // Verifica se já pediu
         const q = query(collection(db, "solicitacoes"), where("uid_usuario", "==", auth.currentUser.uid), where("id_comunidade", "==", comId));
-        if(!(await getDocs(q)).empty) {
-            alert("Você já enviou uma solicitação para esta comunidade. Aguarde a aprovação.");
-            return;
-        }
-
+        if(!(await getDocs(q)).empty) { alert("Você já enviou uma solicitação para esta comunidade. Aguarde a aprovação."); return; }
         await addDoc(collection(db, "solicitacoes"), {
             id_comunidade: comId, nome_comunidade: comNome, id_criador: idCriador,
             uid_usuario: auth.currentUser.uid, email_usuario: auth.currentUser.email,
             nome_usuario: currentUserData.nome, status: 'pendente', data_hora: new Date().toISOString()
         });
-        alert("Solicitação enviada aos administradores! Você será avisado quando aprovado.");
-        carregarVitrineComunidades(); // Recarrega para dar feedback (botão pode sumir ou mudar)
-    } catch (error) { alert("Erro ao solicitar acesso."); }
+        alert("Solicitação enviada aos administradores!"); carregarVitrineComunidades(); 
+    } catch (error) {}
 };
 
-// -----------------------------------------
-// 3. MEUS ACESSOS (PROJETOS)
-// -----------------------------------------
-async function carregarMeusAcessos() {
+async function carregarMeusProjetos() {
     myProjectsContainer.innerHTML = '<p class="loading-text">Buscando seus projetos...</p>';
-    
     try {
         const comSnapshot = await getDocs(collection(db, "comunidades"));
-        let minhasComunidades = { admin: [], membro: [] };
+        let minhasComunidades = { produtor: [], admin: [], membro: [] };
         const arraysUsuario = { acesso: currentUserData?.acesso_comunidades || [] };
 
         comSnapshot.forEach(doc => {
             const data = doc.data(); const id = doc.id;
-            let isCriador = data.id_criador === auth.currentUser.uid;
-            let isAdmin = data.admins_emails && data.admins_emails.includes(auth.currentUser.email);
-            let isMembro = arraysUsuario.acesso.includes(id);
-
-            if (isCriador || isAdmin || currentUserRole === 'programador') minhasComunidades.admin.push(id);
-            else if (isMembro) minhasComunidades.membro.push(id);
+            if (data.id_criador === auth.currentUser.uid || currentUserRole === 'programador') minhasComunidades.produtor.push(id);
+            else if (data.admins_emails && data.admins_emails.includes(auth.currentUser.email)) minhasComunidades.admin.push(id);
+            else if (arraysUsuario.acesso.includes(id)) minhasComunidades.membro.push(id);
         });
 
         const projSnapshot = await getDocs(collection(db, "projetos"));
-        let projetosAdmin = []; let projetosMembro = [];
+        let projetosProdutor = []; let projetosAdmin = []; let projetosMembro = [];
 
         projSnapshot.forEach(doc => {
             const data = doc.data();
-            if (minhasComunidades.admin.includes(data.id_comunidade)) projetosAdmin.push({id: doc.id, data});
+            if (minhasComunidades.produtor.includes(data.id_comunidade)) projetosProdutor.push({id: doc.id, data});
+            else if (minhasComunidades.admin.includes(data.id_comunidade)) projetosAdmin.push({id: doc.id, data});
             else if (minhasComunidades.membro.includes(data.id_comunidade)) projetosMembro.push({id: doc.id, data});
         });
 
@@ -389,24 +368,19 @@ async function carregarMeusAcessos() {
         const renderGrid = (titulo, lista) => {
             if(lista.length === 0) return '';
             let html = `<div class="category-section"><h3 class="category-title">${titulo}</h3><div class="community-grid">`;
-            lista.forEach(p => {
-                html += `
-                <div class="community-card">
-                    <div><h3>${p.data.titulo}</h3><p>${p.data.descricao || ''}</p></div>
-                    <button onclick="abrirFeedProjeto('${p.id}')">Acessar Feed</button>
-                </div>`;
-            });
+            lista.forEach(p => { html += `<div class="community-card"><div><h3>${p.data.titulo}</h3><p>${p.data.descricao || ''}</p></div><button onclick="abrirFeedProjeto('${p.id}')">Acessar Feed</button></div>`; });
             html += `</div></div>`; return html;
         };
 
-        if (projetosAdmin.length === 0 && projetosMembro.length === 0) {
+        if (projetosProdutor.length === 0 && projetosAdmin.length === 0 && projetosMembro.length === 0) {
             myProjectsContainer.innerHTML = '<p class="loading-text">Você ainda não possui acessos. Vá em Explorar!</p>'; return;
         }
 
-        myProjectsContainer.innerHTML += renderGrid("Módulos que Administro", projetosAdmin);
-        myProjectsContainer.innerHTML += renderGrid("Módulos que Participo", projetosMembro);
+        myProjectsContainer.innerHTML += renderGrid("Projetos como Produtor", projetosProdutor);
+        myProjectsContainer.innerHTML += renderGrid("Projetos como Administrador", projetosAdmin);
+        myProjectsContainer.innerHTML += renderGrid("Projetos como Aluno", projetosMembro);
 
-    } catch(error) { console.error(error); }
+    } catch(error) {}
 }
 
 // -----------------------------------------
@@ -429,42 +403,35 @@ window.abrirFeedProjeto = async (projId) => {
 
             carregarPostagensProjeto();
         }
-    } catch (error) { console.error(error); }
+    } catch (error) {}
 };
 
 document.getElementById('btn-edit-photo').addEventListener('click', async () => {
     const url = prompt("Cole o link (URL) da nova imagem circular:");
     if (url && currentProjetoId) {
         try { await updateDoc(doc(db, "projetos", currentProjetoId), { foto_url: url }); document.getElementById('feed-photo').src = url; } 
-        catch (error) { alert("Erro ao atualizar foto."); }
+        catch (error) {}
     }
 });
 
 document.getElementById('form-post').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const texto = document.getElementById('post-text').value;
-    const imageUrl = document.getElementById('post-image-url').value;
+    const texto = document.getElementById('post-text').value; const imageUrl = document.getElementById('post-image-url').value;
     const btn = e.target.querySelector('button'); btn.textContent = 'Postando...'; btn.disabled = true;
 
     try {
-        await addDoc(collection(db, "postagens"), {
-            id_projeto: currentProjetoId, autor_email: auth.currentUser.email, texto: texto, 
-            imagem_url: imageUrl, data_hora: new Date().toISOString()
-        });
+        await addDoc(collection(db, "postagens"), { id_projeto: currentProjetoId, autor_email: auth.currentUser.email, texto: texto, imagem_url: imageUrl, data_hora: new Date().toISOString() });
         e.target.reset(); carregarPostagensProjeto();
-    } catch (error) { alert("Erro: " + error.message); } 
-    finally { btn.textContent = 'Publicar'; btn.disabled = false; }
+    } catch (error) {} finally { btn.textContent = 'Publicar'; btn.disabled = false; }
 });
 
 async function carregarPostagensProjeto() {
     try {
         const q = query(collection(db, "postagens"), where("id_projeto", "==", currentProjetoId));
-        const snapshot = await getDocs(q);
-        let posts = []; snapshot.forEach(doc => posts.push({id: doc.id, ...doc.data()}));
+        const snapshot = await getDocs(q); let posts = []; snapshot.forEach(doc => posts.push({id: doc.id, ...doc.data()}));
         posts.sort((a, b) => new Date(b.data_hora) - new Date(a.data_hora)); 
 
-        const pFeed = document.getElementById('posts-feed');
-        pFeed.innerHTML = '';
+        const pFeed = document.getElementById('posts-feed'); pFeed.innerHTML = '';
         if(posts.length === 0) { pFeed.innerHTML = '<p class="loading-text">Nenhuma postagem ainda.</p>'; return; }
 
         posts.forEach(post => {
@@ -492,7 +459,7 @@ async function carregarPostagensProjeto() {
                 </div>`;
             carregarComentarios(post.id);
         });
-    } catch (error) { console.error(error); }
+    } catch (error) {}
 }
 
 window.enviarComentario = async (e, postId) => {
@@ -508,8 +475,7 @@ async function carregarComentarios(postId) {
     const list = document.getElementById(`comments-${postId}`);
     try {
         const q = query(collection(db, "comentarios"), where("id_post", "==", postId));
-        const snapshot = await getDocs(q);
-        let coments = []; snapshot.forEach(doc => coments.push({id: doc.id, ...doc.data()}));
+        const snapshot = await getDocs(q); let coments = []; snapshot.forEach(doc => coments.push({id: doc.id, ...doc.data()}));
         coments.sort((a, b) => new Date(a.data_hora) - new Date(b.data_hora)); 
 
         list.innerHTML = '';
@@ -530,7 +496,6 @@ async function carregarComentarios(postId) {
 function processarTextoLinks(texto) {
     let seguro = texto.replace(/</g, "&lt;").replace(/>/g, "&gt;"); const urlRegex = /(https?:\/\/[^\s]+)/g;
     return seguro.replace(urlRegex, (url) => {
-        const urlLower = url.toLowerCase();
         const ytMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
         if (ytMatch && ytMatch[1]) { return `<iframe class="post-media" src="https://www.youtube.com/embed/${ytMatch[1]}" frameborder="0" allowfullscreen></iframe>`; }
         return `<br><a href="${url}" target="_blank" class="btn-link">Acessar Link Externo</a><br>`;
@@ -538,13 +503,13 @@ function processarTextoLinks(texto) {
 }
 
 // -----------------------------------------
-// PAINEL DE CONTROLE E GESTÃO
+// PAINEL DE CONTROLE (NOVA EDIÇÃO COMPLETA)
 // -----------------------------------------
 async function carregarComunidadesSelects(userEmail, role) {
-    const selects = [document.getElementById('projeto-id-comunidade-select'), document.getElementById('add-admin-select')];
+    const selects = [document.getElementById('projeto-id-comunidade-select'), document.getElementById('add-admin-select'), document.getElementById('edit-com-select')];
     try {
         let q = (role === 'programador') ? collection(db, "comunidades") : query(collection(db, "comunidades"), where("admins_emails", "array-contains", userEmail));
-        const snapshot = await getDocs(q); let optionsHTML = '<option value="">Selecione a Comunidade...</option>';
+        const snapshot = await getDocs(q); let optionsHTML = '<option value="">Selecione...</option>';
         snapshot.forEach(doc => { optionsHTML += `<option value="${doc.id}">${doc.data().nome}</option>`; });
         selects.forEach(s => { if(s) s.innerHTML = optionsHTML; });
     } catch (error) { }
@@ -559,7 +524,51 @@ document.getElementById('form-comunidade').addEventListener('submit', async (e) 
             id_criador: auth.currentUser.uid, admins_emails: [auth.currentUser.email] 
         });
         alert(`Comunidade criada!`); e.target.reset(); carregarComunidadesSelects(auth.currentUser.email, currentUserRole); carregarListaGerenciamento();
-    } catch (error) { alert("Erro."); } finally { btn.textContent = 'Salvar Comunidade'; btn.disabled = false; }
+    } catch (error) {} finally { btn.textContent = 'Criar Comunidade'; btn.disabled = false; }
+});
+
+// EDIÇÃO COMPLETA DE COMUNIDADE
+document.getElementById('edit-com-select').addEventListener('change', async (e) => {
+    if(!e.target.value) { document.getElementById('form-edit-comunidade').reset(); return; }
+    const docSnap = await getDoc(doc(db, "comunidades", e.target.value));
+    if(docSnap.exists()){
+        const d = docSnap.data();
+        document.getElementById('edit-com-nome').value = d.nome;
+        document.getElementById('edit-com-desc').value = d.descricao;
+        document.getElementById('edit-com-visibilidade').value = d.visibilidade || 'publico';
+        document.getElementById('edit-com-admins').value = (d.admins_emails || []).join(', ');
+        document.getElementById('edit-com-owner').value = ''; 
+    }
+});
+
+document.getElementById('form-edit-comunidade').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const comId = document.getElementById('edit-com-select').value;
+    if(!comId) return alert("Selecione uma comunidade para editar.");
+
+    const btn = e.target.querySelector('button');
+    btn.textContent = 'Salvando...'; btn.disabled = true;
+
+    try {
+        let updateData = {
+            nome: document.getElementById('edit-com-nome').value,
+            descricao: document.getElementById('edit-com-desc').value,
+            visibilidade: document.getElementById('edit-com-visibilidade').value,
+            admins_emails: document.getElementById('edit-com-admins').value.split(',').map(em => em.trim()).filter(em => em)
+        };
+
+        const newOwnerEmail = document.getElementById('edit-com-owner').value.trim();
+        if(newOwnerEmail) {
+            const qUser = query(collection(db, "users"), where("email", "==", newOwnerEmail));
+            const userSnap = await getDocs(qUser);
+            if(userSnap.empty) alert("O e-mail digitado para novo Dono não existe. As demais alterações foram salvas.");
+            else { updateData.id_criador = userSnap.docs[0].id; alert("Propriedade da Comunidade transferida com sucesso!"); }
+        }
+
+        await updateDoc(doc(db, "comunidades", comId), updateData);
+        alert("Comunidade atualizada com sucesso!");
+        e.target.reset(); carregarComunidadesSelects(auth.currentUser.email, currentUserRole); carregarListaGerenciamento();
+    } catch (err) { alert("Erro ao editar."); } finally { btn.textContent = 'Salvar Alterações'; btn.disabled = false; }
 });
 
 document.getElementById('form-projeto').addEventListener('submit', async (e) => {
@@ -570,8 +579,8 @@ document.getElementById('form-projeto').addEventListener('submit', async (e) => 
             id_comunidade: document.getElementById('projeto-id-comunidade-select').value, 
             seguidores: 0, membros: 0, foto_url: "https://via.placeholder.com/150"
         });
-        alert("Projeto salvo com sucesso!"); e.target.reset(); carregarListaGerenciamento();
-    } catch (error) { alert("Erro."); } finally { btn.textContent = 'Salvar Projeto'; btn.disabled = false; }
+        alert("Projeto salvo!"); e.target.reset(); carregarListaGerenciamento();
+    } catch (error) {} finally { btn.textContent = 'Salvar Projeto'; btn.disabled = false; }
 });
 
 window.excluirDocumento = async (colecao, idDoc, refReloadId = null) => {
@@ -587,7 +596,7 @@ window.excluirDocumento = async (colecao, idDoc, refReloadId = null) => {
 };
 
 window.editarDocumentoTextual = async (colecao, idDoc, campoAtualizar) => {
-    const novoValor = prompt("Digite o novo texto:");
+    const novoValor = prompt("Digite o novo título:");
     if(novoValor && novoValor.trim() !== "") {
         try { await updateDoc(doc(db, colecao, idDoc), { [campoAtualizar]: novoValor }); carregarListaGerenciamento(); } catch (error) {}
     }
@@ -598,19 +607,7 @@ async function carregarListaGerenciamento() {
     if(currentUserRole === 'usuario') return;
 
     try {
-        let html = '<h4 style="margin-bottom: 10px; color: var(--text-color);">Comunidades</h4>';
-        const qCom = (currentUserRole === 'programador') ? collection(db, "comunidades") : query(collection(db, "comunidades"), where("admins_emails", "array-contains", auth.currentUser.email));
-        const snapCom = await getDocs(qCom);
-        snapCom.forEach(doc => {
-            html += `<div class="user-card">
-                        <div class="user-info"><span class="user-email">${doc.data().nome}</span></div>
-                        <div class="user-actions">
-                            <button class="btn-sm btn-edit" onclick="editarDocumentoTextual('comunidades', '${doc.id}', 'nome')">Editar Nome</button>
-                            <button class="btn-sm btn-delete" onclick="excluirDocumento('comunidades', '${doc.id}')">Excluir</button>
-                        </div>
-                     </div>`;
-        });
-        html += '<h4 style="margin-top:20px; margin-bottom: 10px; color: var(--text-color);">Projetos</h4>';
+        let html = '<h4 style="margin-top:20px; margin-bottom: 10px; color: var(--text-color);">Seus Projetos</h4>';
         const snapProj = await getDocs(collection(db, "projetos"));
         snapProj.forEach(doc => {
             html += `<div class="user-card">
@@ -622,21 +619,17 @@ async function carregarListaGerenciamento() {
                      </div>`;
         });
         mList.innerHTML = html;
-    } catch (error) { mList.innerHTML = '<p>Erro.</p>'; }
+    } catch (error) { mList.innerHTML = '<p>Erro ao carregar dados.</p>'; }
 }
 
 // SOLICITAÇÕES DE ENTRADA
 async function carregarSolicitacoes() {
-    const list = document.getElementById('requests-list');
-    list.innerHTML = '<p class="loading-text">Buscando...</p>';
+    const list = document.getElementById('requests-list'); list.innerHTML = '<p class="loading-text">Buscando...</p>';
     if(currentUserRole === 'usuario') return;
 
     try {
-        // Pega os IDs das comunidades que o adm gerencia
         const qCom = (currentUserRole === 'programador') ? collection(db, "comunidades") : query(collection(db, "comunidades"), where("admins_emails", "array-contains", auth.currentUser.email));
-        const snapCom = await getDocs(qCom);
-        let myComIds = []; snapCom.forEach(doc => myComIds.push(doc.id));
-
+        const snapCom = await getDocs(qCom); let myComIds = []; snapCom.forEach(doc => myComIds.push(doc.id));
         if(myComIds.length === 0) { list.innerHTML = '<p>Você não administra comunidades.</p>'; return; }
 
         const qSol = query(collection(db, "solicitacoes"), where("status", "==", "pendente"));
@@ -660,21 +653,18 @@ async function carregarSolicitacoes() {
             }
         });
         list.innerHTML = html || '<p>Nenhuma solicitação pendente.</p>';
-    } catch(e) { list.innerHTML = '<p>Erro.</p>'; }
+    } catch(e) {}
 }
 
 window.aprovarSolicitacao = async (reqId, uidUsuario, comId) => {
     try {
-        // Adiciona comunidade ao array do usuário
         await updateDoc(doc(db, "users", uidUsuario), { acesso_comunidades: arrayUnion(comId) });
-        // Deleta a solicitacao
         await deleteDoc(doc(db, "solicitacoes", reqId));
-        alert("Usuário aprovado!");
-        carregarSolicitacoes();
+        alert("Usuário aprovado!"); carregarSolicitacoes();
     } catch(e) { alert("Erro ao aprovar."); }
 }
 
-// GESTÃO MASTER DE USUÁRIOS
+// GESTÃO DE USUÁRIOS
 async function carregarListaDeUsuarios() {
     try {
         const querySnapshot = await getDocs(collection(db, "users"));
