@@ -54,13 +54,11 @@
                 </div>
             </div>
 
-            <!-- Vitrine de Comunidades (Visível para todos os logados) -->
+            <!-- Vitrine de Comunidades -->
             <div id="dynamic-content" class="hidden">
                 <h2>Explorar Comunidades</h2>
                 <p>Confira as comunidades disponíveis na plataforma.</p>
-                <div id="community-grid" class="community-grid">
-                    <!-- Comunidades serão injetadas aqui pelo JS -->
-                </div>
+                <div id="community-grid" class="community-grid"></div>
             </div>
             
             <!-- Painel de Controle -->
@@ -81,9 +79,10 @@
 
                     <div class="admin-form-container">
                         <h3>Adicionar Administrador à Comunidade</h3>
-                        <p style="font-size: 0.85rem; color: #555;">Informe o ID da sua comunidade e o e-mail de quem irá administrá-la.</p>
                         <form id="form-add-admin">
-                            <input type="text" id="add-admin-id" placeholder="ID da Comunidade" required>
+                            <select id="add-admin-select" required>
+                                <option value="">Selecione a Comunidade...</option>
+                            </select>
                             <input type="email" id="add-admin-email" placeholder="E-mail do Administrador" required>
                             <button type="submit">Nomear Administrador</button>
                         </form>
@@ -95,7 +94,9 @@
                     <h3>Criar Novo Projeto (Módulo)</h3>
                     <form id="form-projeto">
                         <input type="text" id="projeto-titulo" placeholder="Título do Projeto (ex: Módulo 1)" required>
-                        <input type="text" id="projeto-id-comunidade" placeholder="ID da Comunidade" required>
+                        <select id="projeto-id-comunidade-select" required>
+                            <option value="">Selecione a Comunidade...</option>
+                        </select>
                         <input type="url" id="projeto-url" placeholder="URL do PDF" required>
                         <button type="submit">Salvar Projeto</button>
                     </form>
