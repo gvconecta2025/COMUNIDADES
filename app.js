@@ -215,7 +215,7 @@ async function carregarVitrineComunidades() {
 window.listarProjetosDaComunidade = async (comId, comNome) => {
     dynamicTitle.textContent = "Projetos em: " + comNome;
     dynamicSubtitle.textContent = "Selecione o feed que deseja acessar.";
-    communitiesContainer.innerHTML = '<p>Buscando projetos...</p>';
+    communitiesContainer.innerHTML = '<p class="loading-text">Buscando projetos...</p>';
     
     try {
         const q = query(collection(db, "projetos"), where("id_comunidade", "==", comId));
@@ -237,7 +237,7 @@ window.listarProjetosDaComunidade = async (comId, comNome) => {
 
 window.abrirFeedProjeto = async (projId) => {
     esconderTelas(); projectView.classList.remove('hidden'); currentProjetoId = projId;
-    postsFeed.innerHTML = '<p>Carregando postagens...</p>';
+    postsFeed.innerHTML = '<p class="loading-text">Carregando postagens...</p>';
 
     try {
         const projDoc = await getDoc(doc(db, "projetos", projId));
@@ -295,7 +295,7 @@ async function carregarPostagens() {
         posts.sort((a, b) => new Date(b.data_hora) - new Date(a.data_hora)); 
 
         postsFeed.innerHTML = '';
-        if(posts.length === 0) { postsFeed.innerHTML = '<p>Nenhuma postagem ainda.</p>'; return; }
+        if(posts.length === 0) { postsFeed.innerHTML = '<p class="loading-text">Nenhuma postagem ainda.</p>'; return; }
 
         posts.forEach(post => {
             const dataFormatada = new Date(post.data_hora).toLocaleString('pt-BR');
@@ -303,19 +303,19 @@ async function carregarPostagens() {
             const imgHtml = post.imagem_url ? `<img src="${post.imagem_url}" class="post-media">` : '';
             
             const podeExcluir = (currentUserRole !== 'usuario' || post.autor_email === auth.currentUser.email);
-            const btnExcluir = podeExcluir ? `<button class="btn-sm btn-delete" onclick="excluirDocumento('postagens', '${post.id}')">Excluir Post</button>` : '';
+            const btnExcluir = podeExcluir ? `<button class="btn-sm btn-delete" onclick="excluirDocumento('postagens', '${post.id}')">Excluir</button>` : '';
 
             postsFeed.innerHTML += `
                 <div class="post-card" id="post-${post.id}">
                     <div class="post-header">
-                        <div class="post-meta">Postado por <b>${post.autor_email}</b> em ${dataFormatada}</div>
+                        <div class="post-meta"><b>${post.autor_email}</b> • ${dataFormatada}</div>
                         <div class="post-actions">${btnExcluir}</div>
                     </div>
                     <div class="post-content">${textoFormatado}</div>
                     ${imgHtml}
                     
                     <div class="comments-section">
-                        <div class="comment-list" id="comments-${post.id}">Carregando comentários...</div>
+                        <div class="comment-list" id="comments-${post.id}">Carregando...</div>
                         <form class="comment-form" onsubmit="enviarComentario(event, '${post.id}')">
                             <input type="text" id="input-comment-${post.id}" placeholder="Escreva um comentário..." required>
                             <button type="submit">Enviar</button>
@@ -351,11 +351,11 @@ async function carregarComentarios(postId) {
         coments.sort((a, b) => new Date(a.data_hora) - new Date(b.data_hora)); 
 
         list.innerHTML = '';
-        if(coments.length === 0) { list.innerHTML = '<span style="font-size:0.85rem; color:#888;">Nenhum comentário.</span>'; return; }
+        if(coments.length === 0) { list.innerHTML = '<span style="font-size:0.85rem; color:var(--text-light);">Seja o primeiro a comentar.</span>'; return; }
 
         coments.forEach(c => {
             const podeExcluir = (currentUserRole !== 'usuario' || c.autor_email === auth.currentUser.email);
-            const btnX = podeExcluir ? `<button onclick="excluirDocumento('comentarios', '${c.id}', '${postId}')" style="background:none; border:none; color:red; cursor:pointer;">✖</button>` : '';
+            const btnX = podeExcluir ? `<button onclick="excluirDocumento('comentarios', '${c.id}', '${postId}')" style="background:none; border:none; color:var(--danger-color); cursor:pointer;">✖</button>` : '';
             list.innerHTML += `
                 <div class="comment-item">
                     <div><span class="comment-author">${c.autor_email}</span> ${c.texto}</div>
@@ -388,7 +388,7 @@ document.getElementById('form-comunidade').addEventListener('submit', async (e) 
             id_criador: auth.currentUser.uid, admins_emails: [auth.currentUser.email] 
         });
         alert(`Comunidade criada!`); e.target.reset(); carregarComunidadesSelects(auth.currentUser.email, currentUserRole); carregarListaGerenciamento();
-    } catch (error) { alert("Erro: " + error.message); } finally { btn.textContent = 'Salvar'; btn.disabled = false; }
+    } catch (error) { alert("Erro: " + error.message); } finally { btn.textContent = 'Salvar Comunidade'; btn.disabled = false; }
 });
 
 document.getElementById('form-projeto').addEventListener('submit', async (e) => {
@@ -401,7 +401,7 @@ document.getElementById('form-projeto').addEventListener('submit', async (e) => 
             seguidores: 0, membros: 0, foto_url: "https://via.placeholder.com/150"
         });
         alert("Projeto salvo com sucesso!"); e.target.reset(); carregarListaGerenciamento();
-    } catch (error) { alert("Erro: " + error.message); } finally { btn.textContent = 'Salvar'; btn.disabled = false; }
+    } catch (error) { alert("Erro: " + error.message); } finally { btn.textContent = 'Salvar Projeto'; btn.disabled = false; }
 });
 
 // MOTOR DE EDIÇÃO E EXCLUSÃO GERAL
@@ -427,11 +427,11 @@ window.editarDocumentoTextual = async (colecao, idDoc, campoAtualizar) => {
 }
 
 async function carregarListaGerenciamento() {
-    managementList.innerHTML = '<p>Buscando...</p>';
+    managementList.innerHTML = '<p class="loading-text">Buscando...</p>';
     if(currentUserRole === 'usuario') return;
 
     try {
-        let html = '<h4>Suas Comunidades</h4>';
+        let html = '<h4 style="margin-bottom: 10px; color: var(--text-color);">Suas Comunidades</h4>';
         const qCom = (currentUserRole === 'programador') ? collection(db, "comunidades") : query(collection(db, "comunidades"), where("admins_emails", "array-contains", auth.currentUser.email));
         const snapCom = await getDocs(qCom);
         snapCom.forEach(doc => {
@@ -444,7 +444,7 @@ async function carregarListaGerenciamento() {
                      </div>`;
         });
 
-        html += '<h4 style="margin-top:15px;">Seus Projetos</h4>';
+        html += '<h4 style="margin-top:20px; margin-bottom: 10px; color: var(--text-color);">Seus Projetos</h4>';
         const snapProj = await getDocs(collection(db, "projetos"));
         snapProj.forEach(doc => {
             html += `<div class="user-card">
@@ -482,7 +482,7 @@ function renderizarUsuarios(users) {
                         <option value="produtor" ${roleStr === 'produtor' ? 'selected' : ''}>Produtor</option>
                         <option value="programador" ${roleStr === 'programador' ? 'selected' : ''}>Programador</option>
                     </select>
-                    <button class="btn-update-role" onclick="atualizarNivel('${user.id}')">Salvar</button>
+                    <button class="btn-update-role btn-sm" style="background-color: var(--primary-color);" onclick="atualizarNivel('${user.id}')">Salvar</button>
                 </div>
             </div>`;
     });
