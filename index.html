@@ -24,7 +24,7 @@
             <nav>
                 <ul>
                     <li><a href="#comunidades" id="nav-comunidades">Comunidades</a></li>
-                    <li><a href="#projetos" id="nav-projetos">Projetos Avulsos</a></li>
+                    <li><a href="#projetos" id="nav-projetos">Meus Projetos</a></li>
                     <li id="admin-panel-link" class="hidden"><a href="#admin" id="nav-admin">Painel de Controle</a></li>
                 </ul>
             </nav>
@@ -56,9 +56,40 @@
 
             <!-- Vitrine de Comunidades -->
             <div id="dynamic-content" class="hidden">
-                <h2>Explorar Comunidades</h2>
-                <p>Confira as comunidades disponíveis na plataforma.</p>
+                <h2 id="dynamic-title">Explorar Comunidades</h2>
+                <p id="dynamic-subtitle">Confira as comunidades disponíveis na plataforma.</p>
                 <div id="community-grid" class="community-grid"></div>
+            </div>
+
+            <!-- Feed do Projeto -->
+            <div id="project-view" class="hidden">
+                <div class="feed-header">
+                    <div class="feed-photo-container">
+                        <img src="https://via.placeholder.com/150" id="feed-photo" class="circular-photo" alt="Foto do Projeto">
+                        <button id="btn-edit-photo" class="btn-round hidden">✏️</button>
+                    </div>
+                    <div class="feed-info">
+                        <h2 id="feed-title">Carregando...</h2>
+                        <p id="feed-desc">...</p>
+                        <div class="feed-stats">
+                            <span id="feed-followers">0</span> Seguidores | 
+                            <span id="feed-members">0</span> Membros
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulário de Nova Postagem (Oculto para usuários comuns) -->
+                <div id="post-creator" class="admin-form-container hidden">
+                    <form id="form-post">
+                        <textarea id="post-text" placeholder="O que você quer compartilhar na comunidade? Cole links de vídeos ou imagens aqui." required></textarea>
+                        <button type="submit">Publicar</button>
+                    </form>
+                </div>
+
+                <!-- Lista de Postagens -->
+                <div id="posts-feed" class="posts-feed">
+                    <p>Carregando postagens...</p>
+                </div>
             </div>
             
             <!-- Painel de Controle -->
@@ -66,7 +97,6 @@
                 <h2>Painel de Controle</h2>
                 <p>Gerenciamento de conteúdo.</p>
                 
-                <!-- Exclusivo para Programador e Produtor -->
                 <div id="tools-produtor" class="hidden">
                     <div class="admin-form-container">
                         <h3>Criar Nova Comunidade</h3>
@@ -89,20 +119,18 @@
                     </div>
                 </div>
 
-                <!-- Visível para Programador, Produtor e Admin -->
                 <div class="admin-form-container">
-                    <h3>Criar Novo Projeto (Módulo)</h3>
+                    <h3>Criar Novo Projeto (Feed)</h3>
                     <form id="form-projeto">
-                        <input type="text" id="projeto-titulo" placeholder="Título do Projeto (ex: Módulo 1)" required>
+                        <input type="text" id="projeto-titulo" placeholder="Nome do Projeto" required>
+                        <textarea id="projeto-desc" placeholder="Descrição do projeto (sobre o que é este feed?)" required></textarea>
                         <select id="projeto-id-comunidade-select" required>
                             <option value="">Selecione a Comunidade...</option>
                         </select>
-                        <input type="url" id="projeto-url" placeholder="URL do PDF" required>
                         <button type="submit">Salvar Projeto</button>
                     </form>
                 </div>
 
-                <!-- Gestão de Usuários (Exclusivo Programador) -->
                 <div id="master-admin-tools" class="admin-form-container hidden">
                     <h3>Gestão de Usuários e Acessos</h3>
                     <input type="text" id="search-user" class="search-input" placeholder="Pesquisar usuário por e-mail...">
