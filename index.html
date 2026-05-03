@@ -54,13 +54,11 @@
                 </div>
             </div>
 
-            <!-- Vitrine de Comunidades Categorizada -->
+            <!-- Vitrine -->
             <div id="dynamic-content" class="hidden">
                 <h2 id="dynamic-title">Comunidades</h2>
                 <p id="dynamic-subtitle">Acesse ou explore novas comunidades na plataforma.</p>
-                <div id="communities-container">
-                    <!-- As seções serão injetadas aqui pelo JS -->
-                </div>
+                <div id="communities-container"></div>
             </div>
 
             <!-- Feed do Projeto -->
@@ -82,7 +80,8 @@
 
                 <div id="post-creator" class="admin-form-container hidden">
                     <form id="form-post">
-                        <textarea id="post-text" placeholder="O que você quer compartilhar na comunidade? Cole links de vídeos ou imagens aqui." required></textarea>
+                        <textarea id="post-text" placeholder="O que você quer compartilhar? Cole links do YouTube para vídeos embutidos." required></textarea>
+                        <input type="url" id="post-image-url" placeholder="URL de uma imagem (opcional)" class="file-input">
                         <button type="submit">Publicar</button>
                     </form>
                 </div>
@@ -123,12 +122,20 @@
                     <h3>Criar Novo Projeto (Feed)</h3>
                     <form id="form-projeto">
                         <input type="text" id="projeto-titulo" placeholder="Nome do Projeto" required>
-                        <textarea id="projeto-desc" placeholder="Descrição do projeto (sobre o que é este feed?)" required></textarea>
+                        <textarea id="projeto-desc" placeholder="Descrição do projeto" required></textarea>
                         <select id="projeto-id-comunidade-select" required>
                             <option value="">Selecione a Comunidade...</option>
                         </select>
                         <button type="submit">Salvar Projeto</button>
                     </form>
+                </div>
+
+                <div class="admin-form-container">
+                    <h3>Gerenciar Conteúdos Existentes</h3>
+                    <p style="font-size: 0.85rem; color: #555; margin-bottom: 10px;">Edite ou exclua suas Comunidades e Projetos.</p>
+                    <div id="management-list" class="users-list">
+                        <p>Carregando seus conteúdos...</p>
+                    </div>
                 </div>
 
                 <div id="master-admin-tools" class="admin-form-container hidden">
