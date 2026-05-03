@@ -6,7 +6,7 @@ if ('serviceWorker' in navigator) {
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAy6KKgoKOfpSeSw0rxk--AGdTvq0Y1L3M",
@@ -35,6 +35,10 @@ const mobileNav = document.getElementById('mobile-bottom-nav');
 const adminPanelLink = document.getElementById('admin-panel-link');
 const masterAdminTools = document.getElementById('master-admin-tools');
 
+const searchUserInput = document.getElementById('search-user');
+const usersListContainer = document.getElementById('users-list-container');
+let allUsersData = []; // Armazena a lista para pesquisa local
+
 // Alternar entre Login e Cadastro
 document.getElementById('link-show-register').addEventListener('click', (e) => {
     e.preventDefault();
@@ -62,7 +66,6 @@ document.getElementById('nav-comunidades').addEventListener('click', (e) => {
 // Observador de Estado
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        // Usuário Logado
         userEmailSpan.textContent = user.email;
         logoutBtn.classList.remove('hidden');
         authContainer.classList.add('hidden');
@@ -72,7 +75,6 @@ onAuthStateChanged(auth, async (user) => {
         
         await carregarPerfilUsuario(user.uid);
     } else {
-        // Usuário Deslogado
         userEmailSpan.textContent = 'Não logado';
         logoutBtn.classList.add('hidden');
         sidebar.classList.add('hidden');
@@ -93,18 +95,17 @@ async function carregarPerfilUsuario(uid) {
             const userData = userDoc.data();
             const nivel = userData.role;
 
-            // Níveis 1, 2 e 3 veem o Painel de Controle
             if (nivel === 'programador' || nivel === 'produtor' || nivel === 'admin') {
                 adminPanelLink.classList.remove('hidden');
             }
             
-            // Nível 1 (Programador) vê a ferramenta extra de trocar níveis
             if (nivel === 'programador') {
                 masterAdminTools.classList.remove('hidden');
+                carregarListaDeUsuarios(); // Dispara a busca geral
             }
 
         } else {
-            dynamicContent.innerHTML = `<h2>Erro</h2><p>Perfil de usuário não encontrado no banco de dados.</p>`;
+            dynamicContent.innerHTML = `<h2>Erro</h2><p>Perfil não encontrado.</p>`;
         }
     } catch (error) {
         console.error("Erro ao carregar perfil:", error);
@@ -115,7 +116,6 @@ async function carregarPerfilUsuario(uid) {
 // SISTEMA DE AUTENTICAÇÃO
 // -----------------------------------------
 
-// Realizar Login
 document.getElementById('form-login').addEventListener('submit', (e) => {
     e.preventDefault();
     const email = document.getElementById('login-email').value;
@@ -128,7 +128,6 @@ document.getElementById('form-login').addEventListener('submit', (e) => {
         .finally(() => btn.textContent = 'Entrar');
 });
 
-// Realizar Cadastro (Cria Autenticação e Banco de Dados Nível 4)
 document.getElementById('form-register').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('reg-email').value;
@@ -140,14 +139,12 @@ document.getElementById('form-register').addEventListener('submit', async (e) =>
         const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
         const user = userCredential.user;
 
-        // Grava no Banco de Dados como Nível 4 (usuario)
         await setDoc(doc(db, "users", user.uid), {
             email: email,
             role: 'usuario',
             acesso_comunidades: [],
             acesso_projetos: []
         });
-
         alert("Conta criada com sucesso!");
     } catch (error) {
         alert("Erro ao criar conta: " + error.message);
@@ -156,13 +153,10 @@ document.getElementById('form-register').addEventListener('submit', async (e) =>
     }
 });
 
-// Botão Sair
-logoutBtn.addEventListener('click', () => {
-    signOut(auth);
-});
+logoutBtn.addEventListener('click', () => { signOut(auth); });
 
 // -----------------------------------------
-// FUNÇÕES DO PAINEL DE CONTROLE
+// FUNÇÕES DO PAINEL DE CONTROLE (GRAVAÇÃO)
 // -----------------------------------------
 
 document.getElementById('form-comunidade').addEventListener('submit', async (e) => {
@@ -170,23 +164,15 @@ document.getElementById('form-comunidade').addEventListener('submit', async (e) 
     const nome = document.getElementById('comunidade-nome').value;
     const desc = document.getElementById('comunidade-desc').value;
     const btn = e.target.querySelector('button');
-
     try {
-        btn.textContent = 'Salvando...';
-        btn.disabled = true;
+        btn.textContent = 'Salvando...'; btn.disabled = true;
         const docRef = await addDoc(collection(db, "comunidades"), {
-            nome: nome,
-            descricao: desc,
-            id_criador: auth.currentUser.uid
+            nome: nome, descricao: desc, id_criador: auth.currentUser.uid
         });
         alert(`Comunidade criada!\nGuarde o ID: ${docRef.id}`);
         e.target.reset();
-    } catch (error) {
-        alert("Erro: " + error.message);
-    } finally {
-        btn.textContent = 'Salvar Comunidade';
-        btn.disabled = false;
-    }
+    } catch (error) { alert("Erro: " + error.message); } 
+    finally { btn.textContent = 'Salvar Comunidade'; btn.disabled = false; }
 });
 
 document.getElementById('form-projeto').addEventListener('submit', async (e) => {
@@ -195,44 +181,92 @@ document.getElementById('form-projeto').addEventListener('submit', async (e) => 
     const idComunidade = document.getElementById('projeto-id-comunidade').value;
     const url = document.getElementById('projeto-url').value;
     const btn = e.target.querySelector('button');
-
     try {
-        btn.textContent = 'Salvando...';
-        btn.disabled = true;
+        btn.textContent = 'Salvando...'; btn.disabled = true;
         await addDoc(collection(db, "projetos"), {
-            titulo: titulo,
-            id_comunidade: idComunidade,
-            conteudo_url: url
+            titulo: titulo, id_comunidade: idComunidade, conteudo_url: url
         });
         alert("Projeto salvo com sucesso!");
         e.target.reset();
+    } catch (error) { alert("Erro: " + error.message); } 
+    finally { btn.textContent = 'Salvar Projeto'; btn.disabled = false; }
+});
+
+// -----------------------------------------
+// GESTÃO GERAL DE USUÁRIOS (MASTER ADMIN)
+// -----------------------------------------
+
+async function carregarListaDeUsuarios() {
+    try {
+        usersListContainer.innerHTML = '<p>Carregando banco de dados...</p>';
+        const querySnapshot = await getDocs(collection(db, "users"));
+        allUsersData = [];
+        querySnapshot.forEach((doc) => {
+            allUsersData.push({ id: doc.id, ...doc.data() });
+        });
+        renderizarUsuarios(allUsersData);
+    } catch (error) {
+        console.error(error);
+        usersListContainer.innerHTML = '<p>Erro ao ler usuários.</p>';
+    }
+}
+
+function renderizarUsuarios(users) {
+    usersListContainer.innerHTML = '';
+    if (users.length === 0) {
+        usersListContainer.innerHTML = '<p>Nenhum usuário encontrado.</p>';
+        return;
+    }
+
+    users.forEach(user => {
+        const roleStr = user.role || 'usuario';
+        const tagClass = `tag-${roleStr}`;
+        const card = document.createElement('div');
+        card.className = 'user-card';
+        card.innerHTML = `
+            <div class="user-info">
+                <span class="user-email">${user.email}</span>
+                <span class="tag ${tagClass}">${roleStr.toUpperCase()}</span>
+            </div>
+            <div class="user-actions">
+                <select class="role-select-inline" id="select-${user.id}">
+                    <option value="usuario" ${roleStr === 'usuario' ? 'selected' : ''}>Usuário</option>
+                    <option value="admin" ${roleStr === 'admin' ? 'selected' : ''}>Admin</option>
+                    <option value="produtor" ${roleStr === 'produtor' ? 'selected' : ''}>Produtor</option>
+                    <option value="programador" ${roleStr === 'programador' ? 'selected' : ''}>Programador</option>
+                </select>
+                <button class="btn-update-role" onclick="atualizarNivel('${user.id}')">Salvar</button>
+            </div>
+        `;
+        usersListContainer.appendChild(card);
+    });
+}
+
+// Pesquisa dinâmica em tempo real
+searchUserInput.addEventListener('input', (e) => {
+    const termo = e.target.value.toLowerCase();
+    const filtrados = allUsersData.filter(u => u.email && u.email.toLowerCase().includes(termo));
+    renderizarUsuarios(filtrados);
+});
+
+// Atualiza o Firestore a partir do botão da lista (Anexado ao window para funcionar no módulo)
+window.atualizarNivel = async (uid) => {
+    const selectEl = document.getElementById(`select-${uid}`);
+    const newRole = selectEl.value;
+    const btn = selectEl.nextElementSibling;
+
+    try {
+        btn.textContent = '...';
+        btn.disabled = true;
+        await updateDoc(doc(db, "users", uid), {
+            role: newRole
+        });
+        alert("Acesso atualizado!");
+        carregarListaDeUsuarios(); // Recarrega a lista para atualizar a cor da etiqueta
     } catch (error) {
         alert("Erro: " + error.message);
     } finally {
-        btn.textContent = 'Salvar Projeto';
+        btn.textContent = 'Salvar';
         btn.disabled = false;
     }
-});
-
-// Alterar Nível (Exclusivo Programador)
-document.getElementById('form-role').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const uid = document.getElementById('role-uid').value;
-    const role = document.getElementById('role-select').value;
-    const btn = e.target.querySelector('button');
-
-    try {
-        btn.textContent = 'Atualizando...';
-        btn.disabled = true;
-        await updateDoc(doc(db, "users", uid), {
-            role: role
-        });
-        alert("Nível de acesso atualizado com sucesso!");
-        e.target.reset();
-    } catch (error) {
-        alert("Erro ao atualizar (verifique se o UID está correto): " + error.message);
-    } finally {
-        btn.textContent = 'Atualizar Nível';
-        btn.disabled = false;
-    }
-});
+};
