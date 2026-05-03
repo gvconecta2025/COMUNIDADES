@@ -56,7 +56,7 @@ body { background-color: var(--bg-color); color: var(--text-color); margin: 0; o
     color: #cbd5e1; text-decoration: none; border-radius: 8px;
     font-weight: 600; transition: all 0.2s; white-space: nowrap; overflow: hidden;
 }
-#sidebar nav ul li a:hover { background-color: var(--crm-dark-hover); color: white; }
+#sidebar nav ul li a:hover, #sidebar nav ul li a.active { background-color: var(--crm-dark-hover); color: white; }
 #sidebar.collapsed nav ul { padding: 0 8px; }
 #sidebar.collapsed nav ul li a { justify-content: center; padding: 0.8rem 0; }
 #sidebar.collapsed nav ul li a .text { display: none; }
@@ -68,8 +68,8 @@ body { background-color: var(--bg-color); color: var(--text-color); margin: 0; o
 /* Navbar Superior Branca */
 .navbar { background-color: var(--surface-color); border-bottom: 1px solid var(--border-color); box-shadow: var(--shadow-sm); }
 .navbar-content { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; width: 100%; height: 70px; }
-#user-email { font-weight: 600; margin-right: 15px; font-size: 0.95rem; }
-.navbar button { background-color: var(--primary-color); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: bold; cursor: pointer; }
+#user-name { font-weight: 700; margin-right: 15px; font-size: 1rem; color: var(--primary-color); text-transform: capitalize; }
+.navbar button { background-color: var(--text-color); color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85rem;}
 
 /* Área de Conteúdo Limitada em 50% */
 #content-area { flex: 1; overflow-y: auto; padding: 2rem 1rem; display: flex; flex-direction: column; align-items: center; }
@@ -116,33 +116,36 @@ input, textarea, select { padding: 0.85rem 1rem; border: 1px solid var(--border-
 input:focus, textarea:focus, select:focus { border-color: var(--primary-color); background-color: var(--surface-color); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
 textarea { min-height: 100px; resize: vertical; }
 
-button[type="submit"], .community-card button { background-color: var(--primary-color); color: white; border: none; padding: 0.85rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem; transition: 0.2s; }
-button[type="submit"]:hover, .community-card button:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
-.btn-secondary { background-color: var(--text-color) !important; } .btn-secondary:hover { background-color: #000 !important; }
+button[type="submit"], .community-card button, .btn-primary { background-color: var(--primary-color); color: white; border: none; padding: 0.85rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem; transition: 0.2s; text-align: center;}
+button[type="submit"]:hover, .community-card button:hover, .btn-primary:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
+.btn-secondary { background-color: var(--text-light) !important; color: white !important;} .btn-secondary:hover { background-color: var(--text-color) !important; }
+.btn-success { background-color: var(--success-color) !important; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-weight: bold;}
 
 /* --- VITRINE E GRIDS --- */
 .category-section { margin-top: 1.5rem; margin-bottom: 2rem; }
-.category-title { font-size: 1.15rem; margin-bottom: 1rem; padding-bottom: 5px; font-weight: 700; border-bottom: 1px solid var(--border-color); }
+.category-title { font-size: 1.15rem; margin-bottom: 1rem; padding-bottom: 5px; font-weight: 700; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;}
 .community-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem; }
 .community-card { background: var(--surface-color); padding: 1.5rem; border-radius: var(--border-radius); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: space-between; transition: 0.2s; }
 .community-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
 .community-card h3 { margin-bottom: 0.5rem; font-size: 1.1rem; }
 .community-card p { font-size: 0.95rem; color: var(--text-light); margin-bottom: 1.5rem; line-height: 1.5; }
+.badge-private { background: #fee2e2; color: #b91c1c; font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; font-weight: bold; vertical-align: middle; margin-left: 5px;}
 
-/* --- FEED DO PROJETO --- */
+/* --- FEED E POSTAGENS --- */
 .feed-header { display: flex; gap: 1.5rem; align-items: center; background: var(--surface-color); padding: 2rem; border-radius: var(--border-radius); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); margin-bottom: 2rem; }
-.feed-photo-container { position: relative; width: 110px; height: 110px; flex-shrink: 0; }
+.feed-photo-container { position: relative; width: 100px; height: 100px; flex-shrink: 0; }
 .circular-photo { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid #e0e7ff; }
-.btn-round { position: absolute; bottom: 0; right: 0; background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 50%; width: 35px; height: 35px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); transition: 0.2s;}
-.feed-info h2 { font-size: 1.5rem; margin-bottom: 0.3rem; }
-.feed-info p { color: var(--text-light); margin-bottom: 0.8rem; }
-.feed-stats { font-weight: 600; font-size: 0.9rem; color: var(--primary-color); background: #e0e7ff; padding: 5px 12px; border-radius: 20px; display: inline-block; }
+.btn-round { position: absolute; bottom: 0; right: 0; background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 50%; width: 32px; height: 32px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); transition: 0.2s;}
+.feed-info h2 { font-size: 1.4rem; margin-bottom: 0.3rem; }
+.feed-info p { color: var(--text-light); margin-bottom: 0.8rem; font-size: 0.95rem; }
+.feed-stats { font-weight: 600; font-size: 0.85rem; color: var(--primary-color); background: #e0e7ff; padding: 5px 12px; border-radius: 20px; display: inline-block; }
 
 .posts-feed { display: flex; flex-direction: column; gap: 1.5rem; margin-top: 1.5rem; }
 .post-card { background: var(--surface-color); padding: 1.5rem; border-radius: var(--border-radius); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); }
 .post-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
 .post-meta { font-size: 0.85rem; color: var(--text-light); }
-.post-meta b { color: var(--text-color); }
+.post-meta b { color: var(--text-color); font-weight: 700; text-transform: capitalize;}
+.post-meta .projeto-tag { background: #f3f4f6; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; margin-left: 8px; border: 1px solid #ddd;}
 .post-content { line-height: 1.6; white-space: pre-wrap; font-size: 1rem; }
 .post-media { width: 100%; border-radius: 8px; margin-top: 1rem; border: 1px solid var(--border-color); }
 iframe.post-media { aspect-ratio: 16/9; height: 100%; }
@@ -152,7 +155,7 @@ iframe.post-media { aspect-ratio: 16/9; height: 100%; }
 .comments-section { border-top: 1px solid var(--border-color); padding-top: 1.25rem; margin-top: 1.25rem; }
 .comment-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px; max-height: 250px; overflow-y: auto; }
 .comment-item { background: #f9fafb; padding: 12px 15px; border-radius: 8px; font-size: 0.95rem; display: flex; justify-content: space-between; align-items: flex-start; border: 1px solid var(--border-color); }
-.comment-author { font-weight: 700; display: block; margin-bottom: 4px; font-size: 0.85rem; }
+.comment-author { font-weight: 700; display: block; margin-bottom: 4px; font-size: 0.85rem; text-transform: capitalize;}
 .comment-form { display: flex; gap: 10px; }
 .comment-form input { flex: 1; border-radius: 20px; padding: 0.6rem 1rem; }
 .comment-form button { border-radius: 20px; padding: 0.6rem 1.2rem; font-size: 0.9rem; }
