@@ -20,8 +20,9 @@
             </div>
             <nav>
                 <ul>
-                    <li><a href="#comunidades" id="nav-comunidades" title="Comunidades"><span class="icon">🏘️</span> <span class="text">Comunidades</span></a></li>
-                    <li><a href="#projetos" id="nav-projetos" title="Meus Projetos"><span class="icon">📂</span> <span class="text">Meus Projetos</span></a></li>
+                    <li><a href="#feed" id="nav-feed" title="Meu Feed"><span class="icon">📰</span> <span class="text">Meu Feed</span></a></li>
+                    <li><a href="#comunidades" id="nav-comunidades" title="Explorar"><span class="icon">🌍</span> <span class="text">Explorar</span></a></li>
+                    <li><a href="#projetos" id="nav-projetos" title="Meus Projetos"><span class="icon">📂</span> <span class="text">Meus Acessos</span></a></li>
                     <li id="admin-panel-link" class="hidden"><a href="#admin" id="nav-admin" title="Painel de Controle"><span class="icon">⚙️</span> <span class="text">Painel</span></a></li>
                 </ul>
             </nav>
@@ -34,14 +35,13 @@
                     <h1 class="mobile-only" style="color: var(--primary-color); font-size: 1.2rem;">Plataforma</h1>
                     <div class="desktop-only"></div>
                     <div id="user-info">
-                        <span id="user-email">Não logado</span>
+                        <span id="user-name">Não logado</span>
                         <button id="logout-btn" class="hidden">Sair</button>
                     </div>
                 </div>
             </header>
 
             <section id="content-area">
-                
                 <div class="content-50">
                     
                     <div id="auth-container">
@@ -66,21 +66,31 @@
                         </div>
                     </div>
 
-                    <!-- Vitrine de Comunidades -->
+                    <!-- Feed Global (Home) -->
+                    <div id="global-feed-view" class="hidden">
+                        <h2 class="page-title">Meu Feed</h2>
+                        <p class="page-subtitle">Últimas atualizações dos seus projetos e comunidades.</p>
+                        <div id="global-posts-container" class="posts-feed">
+                            <p class="loading-text">Carregando seu feed...</p>
+                        </div>
+                        <button id="btn-load-more" class="btn-secondary hidden" style="width: 100%; margin-top: 20px;">Carregar mais 10 postagens</button>
+                    </div>
+
+                    <!-- Vitrine de Comunidades (Explorar) -->
                     <div id="dynamic-content" class="hidden">
-                        <h2 id="dynamic-title" class="page-title">Comunidades</h2>
-                        <p id="dynamic-subtitle" class="page-subtitle">Acesse ou explore novas comunidades.</p>
+                        <h2 id="dynamic-title" class="page-title">Explorar Comunidades</h2>
+                        <p id="dynamic-subtitle" class="page-subtitle">Encontre novas comunidades para participar.</p>
                         <div id="communities-container"></div>
                     </div>
 
-                    <!-- NOVA ABA: Meus Projetos -->
+                    <!-- Meus Projetos -->
                     <div id="my-projects-view" class="hidden">
-                        <h2 class="page-title">Meus Projetos</h2>
-                        <p class="page-subtitle">Acesso direto aos seus módulos e feeds ativos.</p>
+                        <h2 class="page-title">Meus Acessos</h2>
+                        <p class="page-subtitle">Módulos e feeds que você participa ou administra.</p>
                         <div id="my-projects-container"></div>
                     </div>
 
-                    <!-- Feed do Projeto -->
+                    <!-- Feed Específico do Projeto -->
                     <div id="project-view" class="hidden">
                         <div class="feed-header">
                             <div class="feed-photo-container">
@@ -99,7 +109,7 @@
 
                         <div id="post-creator" class="admin-form-container hidden">
                             <form id="form-post">
-                                <textarea id="post-text" placeholder="O que você quer compartilhar? Cole links do YouTube para vídeos embutidos." required></textarea>
+                                <textarea id="post-text" placeholder="Compartilhe algo na comunidade... (Cole links de YouTube ou imagens)" required></textarea>
                                 <input type="url" id="post-image-url" placeholder="URL de uma imagem (opcional)" class="file-input">
                                 <button type="submit">Publicar</button>
                             </form>
@@ -121,12 +131,16 @@
                                 <form id="form-comunidade">
                                     <input type="text" id="comunidade-nome" placeholder="Nome da Comunidade" required>
                                     <textarea id="comunidade-desc" placeholder="Descrição da comunidade" required></textarea>
+                                    <select id="comunidade-visibilidade" required>
+                                        <option value="publico">Pública (Entrada Imediata)</option>
+                                        <option value="privado">Privada (Requer Aprovação)</option>
+                                    </select>
                                     <button type="submit">Salvar Comunidade</button>
                                 </form>
                             </div>
 
                             <div class="admin-form-container">
-                                <h3>Adicionar Administrador à Comunidade</h3>
+                                <h3>Nomear Administrador</h3>
                                 <form id="form-add-admin">
                                     <select id="add-admin-select" required>
                                         <option value="">Selecione a Comunidade...</option>
@@ -134,6 +148,15 @@
                                     <input type="email" id="add-admin-email" placeholder="E-mail do Administrador" required>
                                     <button type="submit" class="btn-secondary">Nomear Administrador</button>
                                 </form>
+                            </div>
+                        </div>
+
+                        <!-- Solicitações de Entrada -->
+                        <div id="join-requests-container" class="admin-form-container">
+                            <h3>Solicitações de Entrada</h3>
+                            <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 15px;">Aprove ou rejeite usuários que desejam ingressar nas suas comunidades privadas.</p>
+                            <div id="requests-list" class="users-list">
+                                <p class="loading-text">Verificando solicitações...</p>
                             </div>
                         </div>
 
@@ -151,7 +174,6 @@
 
                         <div class="admin-form-container">
                             <h3>Gerenciar Conteúdos Existentes</h3>
-                            <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 15px;">Edite ou exclua suas Comunidades e Projetos.</p>
                             <div id="management-list" class="users-list">
                                 <p class="loading-text">Carregando seus conteúdos...</p>
                             </div>
@@ -171,8 +193,9 @@
 
     <nav id="mobile-bottom-nav" class="mobile-only hidden">
         <ul>
-            <li><a href="#comunidades">Comunidades</a></li>
-            <li><a href="#projetos">Projetos</a></li>
+            <li><a href="#feed" id="mob-nav-feed">Feed</a></li>
+            <li><a href="#comunidades" id="mob-nav-comunidades">Explorar</a></li>
+            <li><a href="#projetos" id="mob-nav-projetos">Acessos</a></li>
             <li id="mobile-admin-panel-link" class="hidden"><a href="#admin">Painel</a></li>
         </ul>
     </nav>
