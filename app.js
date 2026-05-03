@@ -23,6 +23,7 @@ const db = getFirestore(app);
 let currentUserRole = 'usuario';
 let currentUserData = null; 
 let currentProjetoId = null;
+let currentTargetPostId = null; // Guarda ID para focar o post
 let allUsersData = []; 
 let globalFeedPosts = []; 
 let feedPageSize = 10;
@@ -58,7 +59,6 @@ const communitiesContainer = document.getElementById('communities-container');
 const myProjectsContainer = document.getElementById('my-projects-container');
 const requestsList = document.getElementById('requests-list');
 
-// Formulários Auth
 document.getElementById('link-show-register').addEventListener('click', (e) => { e.preventDefault(); loginBox.classList.add('hidden'); registerBox.classList.remove('hidden'); });
 document.getElementById('link-show-login').addEventListener('click', (e) => { e.preventDefault(); registerBox.classList.add('hidden'); loginBox.classList.remove('hidden'); });
 
@@ -82,7 +82,14 @@ navSetup.forEach(nav => {
     if(nav.mobId && document.getElementById(nav.mobId)) document.getElementById(nav.mobId).addEventListener('click', (e) => { e.preventDefault(); nav.action(); });
 });
 
-// Observador Auth
+// Ação de "HOME" nos Títulos Plataforma
+const btnHomeMobile = document.getElementById('logo-home-mobile');
+const btnHomeSidebar = document.getElementById('logo-home-sidebar');
+const goHome = () => { if(auth.currentUser) { esconderTelas(); globalFeedView.classList.remove('hidden'); carregarFeedGlobal(); } };
+if(btnHomeMobile) btnHomeMobile.addEventListener('click', goHome);
+if(btnHomeSidebar) btnHomeSidebar.addEventListener('click', goHome);
+
+
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         document.getElementById('logout-btn').classList.remove('hidden');
@@ -148,9 +155,7 @@ async function carregarPerfilUsuario(uid, email) {
 
 async function atualizarSidebarComunidades() {
     const list = document.getElementById('sidebar-communities-list');
-    if(!list) return;
-    list.innerHTML = '';
-    
+    if(!list) return; list.innerHTML = '';
     try {
         const snap = await getDocs(collection(db, "comunidades"));
         let html = '';
@@ -165,10 +170,7 @@ async function atualizarSidebarComunidades() {
             }
         });
         if(html === '') document.getElementById('sidebar-dynamic-section').classList.add('hidden');
-        else {
-            document.getElementById('sidebar-dynamic-section').classList.remove('hidden');
-            list.innerHTML = html;
-        }
+        else { document.getElementById('sidebar-dynamic-section').classList.remove('hidden'); list.innerHTML = html; }
     } catch(e) {}
 }
 
@@ -214,8 +216,7 @@ document.getElementById('form-register').addEventListener('submit', async (e) =>
         const nomePadrao = emailStr.split('@')[0];
 
         await setDoc(doc(db, "users", userCredential.user.uid), {
-            nome: nomePadrao, email: emailStr, role: cargoInicial, 
-            acesso_comunidades: [], acesso_projetos: []
+            nome: nomePadrao, email: emailStr, role: cargoInicial, acesso_comunidades: [], acesso_projetos: []
         });
         alert("Conta criada com sucesso!");
     } catch (error) { alert("Erro: " + error.message); } 
@@ -242,9 +243,7 @@ async function carregarFeedGlobal() {
             let isCriador = data.id_criador === auth.currentUser.uid;
             let isAdmin = data.admins_emails && data.admins_emails.includes(auth.currentUser.email);
             let isMembro = arraysUsuario.acesso.includes(doc.id);
-            if(isCriador || isAdmin || isMembro || currentUserRole === 'programador') {
-                comunidadesPermitidas.push(doc.id);
-            }
+            if(isCriador || isAdmin || isMembro || currentUserRole === 'programador') comunidadesPermitidas.push(doc.id);
         });
 
         const projSnapshot = await getDocs(collection(db, "projetos"));
@@ -285,7 +284,7 @@ function renderizarLoteFeed() {
         card.innerHTML = `
             <div class="post-header">
                 <div class="post-meta"><b>${post.autor_email.split('@')[0]}</b> <span class="projeto-tag">${post.nome_projeto}</span><br>${dataFormatada}</div>
-                <div class="post-actions"><button class="btn-sm btn-primary" onclick="abrirFeedProjeto('${post.id_projeto}')">Ir para Aula</button></div>
+                <div class="post-actions"><button class="btn-sm btn-primary" onclick="abrirFeedProjeto('${post.id_projeto}', '${post.id}')"><span>💬</span> Acessar Post</button></div>
             </div>
             <div class="post-content">${textoFormatado}</div>
             ${imgHtml}
@@ -399,7 +398,7 @@ async function carregarMeusProjetos() {
 
         myProjectsContainer.innerHTML += renderGrid("Projetos como Produtor", projetosProdutor);
         myProjectsContainer.innerHTML += renderGrid("Projetos como Administrador", projetosAdmin);
-        myProjectsContainer.innerHTML += renderGrid("Projetos como Aluno", projetosMembro);
+        myProjectsContainer.innerHTML += renderGrid("Projetos como Membro", projetosMembro);
 
     } catch(error) {}
 }
@@ -433,8 +432,9 @@ window.listarProjetosDaComunidade = async (comId, comNome) => {
 // -----------------------------------------
 // 4. FEED DO PROJETO ESPECÍFICO
 // -----------------------------------------
-window.abrirFeedProjeto = async (projId) => {
-    esconderTelas(); projectView.classList.remove('hidden'); currentProjetoId = projId;
+window.abrirFeedProjeto = async (projId, targetPostId = null) => {
+    esconderTelas(); projectView.classList.remove('hidden'); 
+    currentProjetoId = projId; currentTargetPostId = targetPostId;
     document.getElementById('posts-feed').innerHTML = '<p class="loading-text">Carregando postagens...</p>';
 
     try {
@@ -506,6 +506,19 @@ async function carregarPostagensProjeto() {
                 </div>`;
             carregarComentarios(post.id);
         });
+
+        // Foca visualmente no Post se veio de um "Deep Link" do Feed
+        if(currentTargetPostId) {
+            setTimeout(() => {
+                const targetEl = document.getElementById(`post-${currentTargetPostId}`);
+                if(targetEl) {
+                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    targetEl.classList.add('highlight-focus');
+                }
+                currentTargetPostId = null; // reseta
+            }, 300);
+        }
+
     } catch (error) {}
 }
 
@@ -550,7 +563,7 @@ function processarTextoLinks(texto) {
 }
 
 // -----------------------------------------
-// PAINEL DE CONTROLE (NOVA EDIÇÃO COMPLETA)
+// PAINEL DE CONTROLE E GESTÃO
 // -----------------------------------------
 async function carregarComunidadesSelects(userEmail, role) {
     const selects = [document.getElementById('projeto-id-comunidade-select'), document.getElementById('add-admin-select'), document.getElementById('edit-com-select')];
@@ -570,11 +583,10 @@ document.getElementById('form-comunidade').addEventListener('submit', async (e) 
             visibilidade: document.getElementById('comunidade-visibilidade').value,
             id_criador: auth.currentUser.uid, admins_emails: [auth.currentUser.email] 
         });
-        alert(`Comunidade criada!`); e.target.reset(); carregarComunidadesSelects(auth.currentUser.email, currentUserRole); carregarListaGerenciamento();
+        alert(`Comunidade criada!`); e.target.reset(); carregarComunidadesSelects(auth.currentUser.email, currentUserRole); carregarListaGerenciamento(); atualizarSidebarComunidades();
     } catch (error) {} finally { btn.textContent = 'Criar Comunidade'; btn.disabled = false; }
 });
 
-// EDIÇÃO COMPLETA DE COMUNIDADE
 document.getElementById('edit-com-select').addEventListener('change', async (e) => {
     if(!e.target.value) { document.getElementById('form-edit-comunidade').reset(); return; }
     const docSnap = await getDoc(doc(db, "comunidades", e.target.value));
@@ -589,17 +601,13 @@ document.getElementById('edit-com-select').addEventListener('change', async (e) 
 });
 
 document.getElementById('form-edit-comunidade').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const comId = document.getElementById('edit-com-select').value;
+    e.preventDefault(); const comId = document.getElementById('edit-com-select').value;
     if(!comId) return alert("Selecione uma comunidade para editar.");
-
-    const btn = e.target.querySelector('button');
-    btn.textContent = 'Salvando...'; btn.disabled = true;
+    const btn = e.target.querySelector('button'); btn.textContent = 'Salvando...'; btn.disabled = true;
 
     try {
         let updateData = {
-            nome: document.getElementById('edit-com-nome').value,
-            descricao: document.getElementById('edit-com-desc').value,
+            nome: document.getElementById('edit-com-nome').value, descricao: document.getElementById('edit-com-desc').value,
             visibilidade: document.getElementById('edit-com-visibilidade').value,
             admins_emails: document.getElementById('edit-com-admins').value.split(',').map(em => em.trim()).filter(em => em)
         };
@@ -609,13 +617,13 @@ document.getElementById('form-edit-comunidade').addEventListener('submit', async
             const qUser = query(collection(db, "users"), where("email", "==", newOwnerEmail));
             const userSnap = await getDocs(qUser);
             if(userSnap.empty) alert("O e-mail digitado para novo Dono não existe. As demais alterações foram salvas.");
-            else { updateData.id_criador = userSnap.docs[0].id; alert("Propriedade da Comunidade transferida com sucesso!"); }
+            else { updateData.id_criador = userSnap.docs[0].id; alert("Propriedade transferida com sucesso!"); }
         }
 
         await updateDoc(doc(db, "comunidades", comId), updateData);
-        alert("Comunidade atualizada com sucesso!");
-        e.target.reset(); carregarComunidadesSelects(auth.currentUser.email, currentUserRole); carregarListaGerenciamento();
-    } catch (err) { alert("Erro ao editar."); } finally { btn.textContent = 'Salvar Alterações'; btn.disabled = false; }
+        alert("Atualizada com sucesso!"); e.target.reset(); 
+        carregarComunidadesSelects(auth.currentUser.email, currentUserRole); carregarListaGerenciamento(); atualizarSidebarComunidades();
+    } catch (err) {} finally { btn.textContent = 'Salvar Alterações'; btn.disabled = false; }
 });
 
 document.getElementById('form-projeto').addEventListener('submit', async (e) => {
@@ -645,7 +653,7 @@ window.excluirDocumento = async (colecao, idDoc, refReloadId = null) => {
 window.editarDocumentoTextual = async (colecao, idDoc, campoAtualizar) => {
     const novoValor = prompt("Digite o novo texto:");
     if(novoValor && novoValor.trim() !== "") {
-        try { await updateDoc(doc(db, colecao, idDoc), { [campoAtualizar]: novoValor }); carregarListaGerenciamento(); } catch (error) {}
+        try { await updateDoc(doc(db, colecao, idDoc), { [campoAtualizar]: novoValor }); carregarListaGerenciamento(); atualizarSidebarComunidades(); } catch (error) {}
     }
 }
 
@@ -669,7 +677,6 @@ async function carregarListaGerenciamento() {
     } catch (error) { mList.innerHTML = '<p>Erro ao carregar dados.</p>'; }
 }
 
-// SOLICITAÇÕES DE ENTRADA
 async function carregarSolicitacoes() {
     const list = document.getElementById('requests-list'); list.innerHTML = '<p class="loading-text">Buscando...</p>';
     if(currentUserRole === 'usuario') return;
@@ -711,7 +718,6 @@ window.aprovarSolicitacao = async (reqId, uidUsuario, comId) => {
     } catch(e) { alert("Erro ao aprovar."); }
 }
 
-// GESTÃO DE USUÁRIOS
 async function carregarListaDeUsuarios() {
     try {
         const querySnapshot = await getDocs(collection(db, "users"));
