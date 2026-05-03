@@ -4,7 +4,7 @@ if ('serviceWorker' in navigator) {
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, query, where, orderBy, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, addDoc, getDocs, query, where, orderBy, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAy6KKgoKOfpSeSw0rxk--AGdTvq0Y1L3M",
@@ -22,7 +22,7 @@ const db = getFirestore(app);
 
 // Referências Globais
 let currentUserRole = 'usuario';
-let currentUserData = null; // Armazena o perfil completo
+let currentUserData = null; 
 let currentProjetoId = null;
 let allUsersData = []; 
 
@@ -39,7 +39,6 @@ const communitiesContainer = document.getElementById('communities-container');
 const dynamicTitle = document.getElementById('dynamic-title');
 const dynamicSubtitle = document.getElementById('dynamic-subtitle');
 
-// Elementos do Feed
 const feedTitle = document.getElementById('feed-title');
 const feedDesc = document.getElementById('feed-desc');
 const feedPhoto = document.getElementById('feed-photo');
@@ -48,6 +47,7 @@ const feedMembers = document.getElementById('feed-members');
 const postsFeed = document.getElementById('posts-feed');
 const postCreator = document.getElementById('post-creator');
 const btnEditPhoto = document.getElementById('btn-edit-photo');
+const managementList = document.getElementById('management-list');
 
 // Toggles de Menus
 document.getElementById('link-show-register').addEventListener('click', (e) => { e.preventDefault(); loginBox.classList.add('hidden'); registerBox.classList.remove('hidden'); });
@@ -55,17 +55,15 @@ document.getElementById('link-show-login').addEventListener('click', (e) => { e.
 
 document.getElementById('nav-admin').addEventListener('click', (e) => { 
     e.preventDefault(); 
-    esconderTelas(); document.getElementById('admin-panel').classList.remove('hidden'); 
+    esconderTelas(); adminPanel.classList.remove('hidden'); 
+    carregarListaGerenciamento();
 });
 document.getElementById('nav-comunidades').addEventListener('click', (e) => { 
     e.preventDefault(); 
     esconderTelas(); dynamicContent.classList.remove('hidden'); 
     carregarVitrineComunidades(); 
 });
-document.getElementById('nav-projetos').addEventListener('click', (e) => {
-    e.preventDefault();
-    alert("Função 'Meus Projetos' (Atalhos diretos) em desenvolvimento.");
-});
+document.getElementById('nav-projetos').addEventListener('click', (e) => { e.preventDefault(); alert("Função em desenvolvimento."); });
 
 function esconderTelas() {
     dynamicContent.classList.add('hidden');
@@ -161,7 +159,7 @@ document.getElementById('form-register').addEventListener('submit', async (e) =>
 logoutBtn.addEventListener('click', () => { signOut(auth); });
 
 // -----------------------------------------
-// VITRINE CATEGORIZADA DE COMUNIDADES
+// VITRINE E FEED
 // -----------------------------------------
 async function carregarVitrineComunidades() {
     dynamicTitle.textContent = "Comunidades";
@@ -171,25 +169,16 @@ async function carregarVitrineComunidades() {
     try {
         const querySnapshot = await getDocs(collection(db, "comunidades"));
         communitiesContainer.innerHTML = '';
-        
-        if (querySnapshot.empty) { 
-            communitiesContainer.innerHTML = '<p>Nenhuma comunidade encontrada.</p>'; 
-            return; 
-        }
+        if (querySnapshot.empty) { communitiesContainer.innerHTML = '<p>Nenhuma comunidade encontrada.</p>'; return; }
 
         const arraysUsuario = {
             acesso: currentUserData?.acesso_comunidades || [],
             seguindo: currentUserData?.seguindo_comunidades || []
         };
-
-        const categorias = {
-            criadas: [], administradas: [], membro: [], seguindo: [], explorar: []
-        };
+        const categorias = { criadas: [], administradas: [], membro: [], seguindo: [], explorar: [] };
 
         querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            const id = doc.id;
-            
+            const data = doc.data(); const id = doc.id;
             let isCriador = data.id_criador === auth.currentUser.uid;
             let isAdmin = data.admins_emails && data.admins_emails.includes(auth.currentUser.email) && !isCriador;
             let isMembro = arraysUsuario.acesso.includes(id);
@@ -202,7 +191,6 @@ async function carregarVitrineComunidades() {
             else categorias.explorar.push({id, data});
         });
 
-        // Função auxiliar para renderizar cada seção
         const renderizarSessao = (titulo, lista) => {
             if (lista.length === 0) return '';
             let html = `<div class="category-section"><h3 class="category-title">${titulo}</h3><div class="community-grid">`;
@@ -219,10 +207,8 @@ async function carregarVitrineComunidades() {
 
         communitiesContainer.innerHTML += renderizarSessao("Criadas por mim (Produtor)", categorias.criadas);
         communitiesContainer.innerHTML += renderizarSessao("Administrando", categorias.administradas);
-        communitiesContainer.innerHTML += renderizarSessao("Membro (Acesso Total)", categorias.membro);
-        communitiesContainer.innerHTML += renderizarSessao("Seguindo", categorias.seguindo);
+        communitiesContainer.innerHTML += renderizarSessao("Membro", categorias.membro);
         communitiesContainer.innerHTML += renderizarSessao("Explorar", categorias.explorar);
-
     } catch (error) { console.error(error); }
 }
 
@@ -237,19 +223,12 @@ window.listarProjetosDaComunidade = async (comId, comNome) => {
         communitiesContainer.innerHTML = '<div class="community-grid" id="projetos-grid"></div>';
         const grid = document.getElementById('projetos-grid');
         
-        if (querySnapshot.empty) {
-            grid.innerHTML = '<p>Esta comunidade ainda não possui projetos.</p>';
-            return;
-        }
-
+        if (querySnapshot.empty) { grid.innerHTML = '<p>Esta comunidade não possui projetos.</p>'; return; }
         querySnapshot.forEach((doc) => {
             const data = doc.data();
             grid.innerHTML += `
                 <div class="community-card">
-                    <div>
-                        <h3>${data.titulo}</h3>
-                        <p>${data.descricao || 'Sem descrição.'}</p>
-                    </div>
+                    <div><h3>${data.titulo}</h3><p>${data.descricao || ''}</p></div>
                     <button onclick="abrirFeedProjeto('${doc.id}')">Acessar Feed</button>
                 </div>`;
         });
@@ -257,9 +236,7 @@ window.listarProjetosDaComunidade = async (comId, comNome) => {
 };
 
 window.abrirFeedProjeto = async (projId) => {
-    esconderTelas();
-    projectView.classList.remove('hidden');
-    currentProjetoId = projId;
+    esconderTelas(); projectView.classList.remove('hidden'); currentProjetoId = projId;
     postsFeed.innerHTML = '<p>Carregando postagens...</p>';
 
     try {
@@ -272,20 +249,15 @@ window.abrirFeedProjeto = async (projId) => {
             feedMembers.textContent = data.membros || 0;
             feedPhoto.src = data.foto_url || "https://via.placeholder.com/150";
 
-            if (currentUserRole !== 'usuario') {
-                postCreator.classList.remove('hidden');
-                btnEditPhoto.classList.remove('hidden');
-            } else {
-                postCreator.classList.add('hidden');
-                btnEditPhoto.classList.add('hidden');
-            }
+            if (currentUserRole !== 'usuario') { postCreator.classList.remove('hidden'); btnEditPhoto.classList.remove('hidden'); } 
+            else { postCreator.classList.add('hidden'); btnEditPhoto.classList.add('hidden'); }
 
             carregarPostagens();
         }
     } catch (error) { console.error(error); }
 };
 
-// Edição de Foto (Simplificada via URL)
+// Edição de Foto do Projeto
 btnEditPhoto.addEventListener('click', async () => {
     const url = prompt("Cole o link (URL) da nova imagem circular:");
     if (url && currentProjetoId) {
@@ -297,16 +269,18 @@ btnEditPhoto.addEventListener('click', async () => {
 });
 
 // -----------------------------------------
-// POSTAGENS E INTERAÇÕES (FEED)
+// POSTAGENS E COMENTÁRIOS
 // -----------------------------------------
 document.getElementById('form-post').addEventListener('submit', async (e) => {
     e.preventDefault();
     const texto = document.getElementById('post-text').value;
+    const imageUrl = document.getElementById('post-image-url').value;
     const btn = e.target.querySelector('button'); btn.textContent = 'Postando...'; btn.disabled = true;
 
     try {
         await addDoc(collection(db, "postagens"), {
-            id_projeto: currentProjetoId, autor_email: auth.currentUser.email, texto: texto, data_hora: new Date().toISOString()
+            id_projeto: currentProjetoId, autor_email: auth.currentUser.email, texto: texto, 
+            imagem_url: imageUrl, data_hora: new Date().toISOString()
         });
         e.target.reset(); carregarPostagens();
     } catch (error) { alert("Erro ao postar: " + error.message); } 
@@ -317,27 +291,78 @@ async function carregarPostagens() {
     try {
         const q = query(collection(db, "postagens"), where("id_projeto", "==", currentProjetoId));
         const snapshot = await getDocs(q);
-        
-        let posts = [];
-        snapshot.forEach(doc => posts.push(doc.data()));
+        let posts = []; snapshot.forEach(doc => posts.push({id: doc.id, ...doc.data()}));
         posts.sort((a, b) => new Date(b.data_hora) - new Date(a.data_hora)); 
 
         postsFeed.innerHTML = '';
-        if(posts.length === 0) {
-            postsFeed.innerHTML = '<p>Nenhuma postagem ainda. Seja o primeiro a postar!</p>';
-            return;
-        }
+        if(posts.length === 0) { postsFeed.innerHTML = '<p>Nenhuma postagem ainda.</p>'; return; }
 
         posts.forEach(post => {
             const dataFormatada = new Date(post.data_hora).toLocaleString('pt-BR');
             const textoFormatado = processarTextoLinks(post.texto);
+            const imgHtml = post.imagem_url ? `<img src="${post.imagem_url}" class="post-media">` : '';
+            
+            const podeExcluir = (currentUserRole !== 'usuario' || post.autor_email === auth.currentUser.email);
+            const btnExcluir = podeExcluir ? `<button class="btn-sm btn-delete" onclick="excluirDocumento('postagens', '${post.id}')">Excluir Post</button>` : '';
+
             postsFeed.innerHTML += `
-                <div class="post-card">
-                    <div class="post-meta">Postado por <b>${post.autor_email}</b> em ${dataFormatada}</div>
+                <div class="post-card" id="post-${post.id}">
+                    <div class="post-header">
+                        <div class="post-meta">Postado por <b>${post.autor_email}</b> em ${dataFormatada}</div>
+                        <div class="post-actions">${btnExcluir}</div>
+                    </div>
                     <div class="post-content">${textoFormatado}</div>
+                    ${imgHtml}
+                    
+                    <div class="comments-section">
+                        <div class="comment-list" id="comments-${post.id}">Carregando comentários...</div>
+                        <form class="comment-form" onsubmit="enviarComentario(event, '${post.id}')">
+                            <input type="text" id="input-comment-${post.id}" placeholder="Escreva um comentário..." required>
+                            <button type="submit">Enviar</button>
+                        </form>
+                    </div>
+                </div>`;
+            
+            carregarComentarios(post.id);
+        });
+    } catch (error) { console.error("Erro posts:", error); }
+}
+
+window.enviarComentario = async (e, postId) => {
+    e.preventDefault();
+    const input = document.getElementById(`input-comment-${postId}`);
+    const texto = input.value;
+    input.disabled = true;
+    try {
+        await addDoc(collection(db, "comentarios"), {
+            id_post: postId, autor_email: auth.currentUser.email, texto: texto, data_hora: new Date().toISOString()
+        });
+        input.value = ''; carregarComentarios(postId);
+    } catch (error) { alert("Erro ao comentar."); }
+    finally { input.disabled = false; }
+};
+
+async function carregarComentarios(postId) {
+    const list = document.getElementById(`comments-${postId}`);
+    try {
+        const q = query(collection(db, "comentarios"), where("id_post", "==", postId));
+        const snapshot = await getDocs(q);
+        let coments = []; snapshot.forEach(doc => coments.push({id: doc.id, ...doc.data()}));
+        coments.sort((a, b) => new Date(a.data_hora) - new Date(b.data_hora)); 
+
+        list.innerHTML = '';
+        if(coments.length === 0) { list.innerHTML = '<span style="font-size:0.85rem; color:#888;">Nenhum comentário.</span>'; return; }
+
+        coments.forEach(c => {
+            const podeExcluir = (currentUserRole !== 'usuario' || c.autor_email === auth.currentUser.email);
+            const btnX = podeExcluir ? `<button onclick="excluirDocumento('comentarios', '${c.id}', '${postId}')" style="background:none; border:none; color:red; cursor:pointer;">✖</button>` : '';
+            list.innerHTML += `
+                <div class="comment-item">
+                    <div><span class="comment-author">${c.autor_email}</span> ${c.texto}</div>
+                    ${btnX}
                 </div>`;
         });
-    } catch (error) { console.error("Erro ao carregar posts:", error); }
+    } catch (error) { list.innerHTML = 'Erro ao carregar comentários.'; }
 }
 
 function processarTextoLinks(texto) {
@@ -345,52 +370,25 @@ function processarTextoLinks(texto) {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     return seguro.replace(urlRegex, (url) => {
         const urlLower = url.toLowerCase();
-        if (urlLower.match(/\.(jpeg|jpg|gif|png|webp|bmp)(?:\?.*)?$/)) {
-            return `<img src="${url}" class="post-media" alt="Imagem postada">`;
-        }
         const ytMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
-        if (ytMatch && ytMatch[1]) {
-            return `<iframe class="post-media" src="https://www.youtube.com/embed/${ytMatch[1]}" frameborder="0" allowfullscreen></iframe>`;
-        }
+        if (ytMatch && ytMatch[1]) { return `<iframe class="post-media" src="https://www.youtube.com/embed/${ytMatch[1]}" frameborder="0" allowfullscreen></iframe>`; }
         return `<br><a href="${url}" target="_blank" class="btn-link">Acessar Link Externo</a><br>`;
     });
 }
 
 // -----------------------------------------
-// PAINEL DE CONTROLE (GRAVAÇÕES ADMIN)
+// PAINEL DE CONTROLE (GRAVAÇÕES E GESTÃO)
 // -----------------------------------------
 document.getElementById('form-comunidade').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = e.target.querySelector('button'); btn.textContent = 'Salvando...'; btn.disabled = true;
     try {
         await addDoc(collection(db, "comunidades"), {
-            nome: document.getElementById('comunidade-nome').value, 
-            descricao: document.getElementById('comunidade-desc').value, 
-            id_criador: auth.currentUser.uid,
-            admins_emails: [auth.currentUser.email] 
+            nome: document.getElementById('comunidade-nome').value, descricao: document.getElementById('comunidade-desc').value, 
+            id_criador: auth.currentUser.uid, admins_emails: [auth.currentUser.email] 
         });
-        alert(`Comunidade criada!`); e.target.reset(); carregarComunidadesSelects(auth.currentUser.email, currentUserRole);
-    } catch (error) { alert("Erro: " + error.message); } 
-    finally { btn.textContent = 'Salvar Comunidade'; btn.disabled = false; }
-});
-
-document.getElementById('form-add-admin').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const adminEmail = document.getElementById('add-admin-email').value;
-    const btn = e.target.querySelector('button'); btn.textContent = 'Processando...'; btn.disabled = true;
-    try {
-        await updateDoc(doc(db, "comunidades", document.getElementById('add-admin-select').value), { admins_emails: arrayUnion(adminEmail) });
-        const q = query(collection(db, "users"), where("email", "==", adminEmail));
-        const querySnapshot = await getDocs(q);
-        if (!querySnapshot.empty) {
-            querySnapshot.forEach(async (uDoc) => {
-                if(uDoc.data().role === 'usuario') await updateDoc(doc(db, "users", uDoc.id), { role: 'admin' });
-            });
-            alert(`Sucesso! Usuário promovido.`);
-        } else { alert(`E-mail vinculado! Ele será promovido quando criar conta.`); }
-        e.target.reset();
-    } catch (error) { alert("Erro: " + error.message); } 
-    finally { btn.textContent = 'Nomear Administrador'; btn.disabled = false; }
+        alert(`Comunidade criada!`); e.target.reset(); carregarComunidadesSelects(auth.currentUser.email, currentUserRole); carregarListaGerenciamento();
+    } catch (error) { alert("Erro: " + error.message); } finally { btn.textContent = 'Salvar'; btn.disabled = false; }
 });
 
 document.getElementById('form-projeto').addEventListener('submit', async (e) => {
@@ -398,26 +396,76 @@ document.getElementById('form-projeto').addEventListener('submit', async (e) => 
     const btn = e.target.querySelector('button'); btn.textContent = 'Salvando...'; btn.disabled = true;
     try {
         await addDoc(collection(db, "projetos"), {
-            titulo: document.getElementById('projeto-titulo').value, 
-            descricao: document.getElementById('projeto-desc').value,
+            titulo: document.getElementById('projeto-titulo').value, descricao: document.getElementById('projeto-desc').value,
             id_comunidade: document.getElementById('projeto-id-comunidade-select').value, 
-            seguidores: 0,
-            membros: 0,
-            foto_url: "https://via.placeholder.com/150"
+            seguidores: 0, membros: 0, foto_url: "https://via.placeholder.com/150"
         });
-        alert("Projeto (Feed) salvo com sucesso!"); e.target.reset();
-    } catch (error) { alert("Erro: " + error.message); } 
-    finally { btn.textContent = 'Salvar Projeto'; btn.disabled = false; }
+        alert("Projeto salvo com sucesso!"); e.target.reset(); carregarListaGerenciamento();
+    } catch (error) { alert("Erro: " + error.message); } finally { btn.textContent = 'Salvar'; btn.disabled = false; }
 });
+
+// MOTOR DE EDIÇÃO E EXCLUSÃO GERAL
+window.excluirDocumento = async (colecao, idDoc, refReloadId = null) => {
+    if(confirm("Tem certeza que deseja excluir permanentemente este item?")) {
+        try {
+            await deleteDoc(doc(db, colecao, idDoc));
+            if(colecao === 'postagens') carregarPostagens();
+            else if(colecao === 'comentarios') carregarComentarios(refReloadId);
+            else carregarListaGerenciamento();
+        } catch (error) { alert("Erro ao excluir: " + error.message); }
+    }
+};
+
+window.editarDocumentoTextual = async (colecao, idDoc, campoAtualizar) => {
+    const novoValor = prompt("Digite o novo texto:");
+    if(novoValor && novoValor.trim() !== "") {
+        try {
+            await updateDoc(doc(db, colecao, idDoc), { [campoAtualizar]: novoValor });
+            carregarListaGerenciamento();
+        } catch (error) { alert("Erro ao editar."); }
+    }
+}
+
+async function carregarListaGerenciamento() {
+    managementList.innerHTML = '<p>Buscando...</p>';
+    if(currentUserRole === 'usuario') return;
+
+    try {
+        let html = '<h4>Suas Comunidades</h4>';
+        const qCom = (currentUserRole === 'programador') ? collection(db, "comunidades") : query(collection(db, "comunidades"), where("admins_emails", "array-contains", auth.currentUser.email));
+        const snapCom = await getDocs(qCom);
+        snapCom.forEach(doc => {
+            html += `<div class="user-card">
+                        <div class="user-info"><span class="user-email">${doc.data().nome}</span></div>
+                        <div class="user-actions">
+                            <button class="btn-sm btn-edit" onclick="editarDocumentoTextual('comunidades', '${doc.id}', 'nome')">Editar Nome</button>
+                            <button class="btn-sm btn-delete" onclick="excluirDocumento('comunidades', '${doc.id}')">Excluir</button>
+                        </div>
+                     </div>`;
+        });
+
+        html += '<h4 style="margin-top:15px;">Seus Projetos</h4>';
+        const snapProj = await getDocs(collection(db, "projetos"));
+        snapProj.forEach(doc => {
+            html += `<div class="user-card">
+                        <div class="user-info"><span class="user-email">${doc.data().titulo}</span></div>
+                        <div class="user-actions">
+                            <button class="btn-sm btn-edit" onclick="editarDocumentoTextual('projetos', '${doc.id}', 'titulo')">Editar Título</button>
+                            <button class="btn-sm btn-delete" onclick="excluirDocumento('projetos', '${doc.id}')">Excluir</button>
+                        </div>
+                     </div>`;
+        });
+        managementList.innerHTML = html;
+    } catch (error) { managementList.innerHTML = '<p>Erro ao carregar dados.</p>'; }
+}
 
 // GESTÃO MASTER DE USUÁRIOS
 async function carregarListaDeUsuarios() {
     try {
         const querySnapshot = await getDocs(collection(db, "users"));
-        allUsersData = [];
-        querySnapshot.forEach((doc) => { allUsersData.push({ id: doc.id, ...doc.data() }); });
+        allUsersData = []; querySnapshot.forEach((doc) => { allUsersData.push({ id: doc.id, ...doc.data() }); });
         renderizarUsuarios(allUsersData);
-    } catch (error) { console.error(error); }
+    } catch (error) {}
 }
 
 function renderizarUsuarios(users) {
@@ -426,10 +474,7 @@ function renderizarUsuarios(users) {
         const roleStr = user.role || 'usuario';
         container.innerHTML += `
             <div class="user-card">
-                <div class="user-info">
-                    <span class="user-email">${user.email}</span>
-                    <span class="tag tag-${roleStr}">${roleStr.toUpperCase()}</span>
-                </div>
+                <div class="user-info"><span class="user-email">${user.email}</span><span class="tag tag-${roleStr}">${roleStr.toUpperCase()}</span></div>
                 <div class="user-actions">
                     <select class="role-select-inline" id="select-${user.id}">
                         <option value="usuario" ${roleStr === 'usuario' ? 'selected' : ''}>Usuário</option>
@@ -442,19 +487,11 @@ function renderizarUsuarios(users) {
             </div>`;
     });
 }
-
 document.getElementById('search-user').addEventListener('input', (e) => {
-    const termo = e.target.value.toLowerCase();
-    renderizarUsuarios(allUsersData.filter(u => u.email && u.email.toLowerCase().includes(termo)));
+    const termo = e.target.value.toLowerCase(); renderizarUsuarios(allUsersData.filter(u => u.email && u.email.toLowerCase().includes(termo)));
 });
-
 window.atualizarNivel = async (uid) => {
-    const selectEl = document.getElementById(`select-${uid}`);
-    const btn = selectEl.nextElementSibling;
-    try {
-        btn.textContent = '...'; btn.disabled = true;
-        await updateDoc(doc(db, "users", uid), { role: selectEl.value });
-        alert("Acesso atualizado!"); carregarListaDeUsuarios(); 
-    } catch (error) { alert("Erro: " + error.message); } 
-    finally { btn.textContent = 'Salvar'; btn.disabled = false; }
+    const selectEl = document.getElementById(`select-${uid}`); const btn = selectEl.nextElementSibling;
+    try { btn.textContent = '...'; btn.disabled = true; await updateDoc(doc(db, "users", uid), { role: selectEl.value }); alert("Acesso atualizado!"); carregarListaDeUsuarios(); } 
+    catch (error) { alert("Erro."); } finally { btn.textContent = 'Salvar'; btn.disabled = false; }
 };
