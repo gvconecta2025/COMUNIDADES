@@ -20,11 +20,26 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Referências Globais
 let currentUserRole = 'usuario';
 let currentUserData = null; 
 let currentProjetoId = null;
 let allUsersData = []; 
+
+// Lógica de Expansão do Menu CRM
+const sidebar = document.getElementById('sidebar');
+const sidebarToggle = document.getElementById('sidebar-toggle');
+
+if(sidebarToggle && sidebar) {
+    sidebarToggle.addEventListener('click', () => {
+        if(sidebar.classList.contains('expanded')) {
+            sidebar.classList.remove('expanded');
+            sidebar.classList.add('collapsed');
+        } else {
+            sidebar.classList.remove('collapsed');
+            sidebar.classList.add('expanded');
+        }
+    });
+}
 
 // Elementos UI
 const logoutBtn = document.getElementById('logout-btn');
@@ -54,14 +69,10 @@ document.getElementById('link-show-register').addEventListener('click', (e) => {
 document.getElementById('link-show-login').addEventListener('click', (e) => { e.preventDefault(); registerBox.classList.add('hidden'); loginBox.classList.remove('hidden'); });
 
 document.getElementById('nav-admin').addEventListener('click', (e) => { 
-    e.preventDefault(); 
-    esconderTelas(); adminPanel.classList.remove('hidden'); 
-    carregarListaGerenciamento();
+    e.preventDefault(); esconderTelas(); adminPanel.classList.remove('hidden'); carregarListaGerenciamento();
 });
 document.getElementById('nav-comunidades').addEventListener('click', (e) => { 
-    e.preventDefault(); 
-    esconderTelas(); dynamicContent.classList.remove('hidden'); 
-    carregarVitrineComunidades(); 
+    e.preventDefault(); esconderTelas(); dynamicContent.classList.remove('hidden'); carregarVitrineComunidades(); 
 });
 document.getElementById('nav-projetos').addEventListener('click', (e) => { e.preventDefault(); alert("Função em desenvolvimento."); });
 
@@ -164,7 +175,7 @@ logoutBtn.addEventListener('click', () => { signOut(auth); });
 async function carregarVitrineComunidades() {
     dynamicTitle.textContent = "Comunidades";
     dynamicSubtitle.textContent = "Acesse ou explore novas comunidades.";
-    communitiesContainer.innerHTML = '<p>Buscando...</p>';
+    communitiesContainer.innerHTML = '<p class="loading-text">Buscando...</p>';
     
     try {
         const querySnapshot = await getDocs(collection(db, "comunidades"));
@@ -257,7 +268,6 @@ window.abrirFeedProjeto = async (projId) => {
     } catch (error) { console.error(error); }
 };
 
-// Edição de Foto do Projeto
 btnEditPhoto.addEventListener('click', async () => {
     const url = prompt("Cole o link (URL) da nova imagem circular:");
     if (url && currentProjetoId) {
