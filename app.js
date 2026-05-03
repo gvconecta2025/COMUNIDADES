@@ -27,7 +27,7 @@ let currentProjetoId = null;
 let currentTargetPostId = null;
 let allUsersData = []; 
 
-// Paginações Independentes
+// Paginações
 let globalFeedPosts = []; let globalFeedIndex = 0;
 let comFeedPosts = []; let comFeedIndex = 0;
 let projFeedPosts = []; let projFeedIndex = 0;
@@ -38,11 +38,26 @@ const sidebar = document.getElementById('sidebar');
 const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
 const mobileCloseSidebar = document.getElementById('mobile-close-sidebar');
 const sidebarToggle = document.getElementById('sidebar-toggle'); 
+const mobileOverlay = document.getElementById('mobile-overlay');
 
-if(mobileMenuToggle) mobileMenuToggle.addEventListener('click', () => sidebar.classList.add('mobile-open'));
-if(mobileCloseSidebar) mobileCloseSidebar.addEventListener('click', () => sidebar.classList.remove('mobile-open'));
+const closeSidebarMobile = () => {
+    sidebar.classList.remove('mobile-open');
+    if(mobileOverlay) mobileOverlay.classList.remove('active');
+};
+
+if(mobileMenuToggle) {
+    mobileMenuToggle.addEventListener('click', () => {
+        sidebar.classList.add('mobile-open');
+        if(mobileOverlay) mobileOverlay.classList.add('active');
+    });
+}
+if(mobileCloseSidebar) mobileCloseSidebar.addEventListener('click', closeSidebarMobile);
+if(mobileOverlay) mobileOverlay.addEventListener('click', closeSidebarMobile);
 if(sidebarToggle) sidebarToggle.addEventListener('click', () => { sidebar.classList.toggle('expanded'); sidebar.classList.toggle('collapsed'); });
-document.querySelectorAll('#sidebar nav a').forEach(link => { link.addEventListener('click', () => { if(window.innerWidth <= 768) sidebar.classList.remove('mobile-open'); }); });
+
+document.querySelectorAll('#sidebar nav a').forEach(link => { 
+    link.addEventListener('click', () => { if(window.innerWidth <= 768) closeSidebarMobile(); }); 
+});
 
 // UI Padrão
 const userNameSpan = document.getElementById('user-name');
@@ -90,7 +105,7 @@ if(searchInput) {
             snapCom.forEach(doc => {
                 const d = doc.data();
                 if(d.nome.toLowerCase().includes(termo) || d.descricao.toLowerCase().includes(termo)) {
-                    hCom += `<div class="community-card"><div><h3>${d.nome}</h3><p>${d.descricao}</p></div><button onclick="listarProjetosDaComunidade('${doc.id}', '${d.nome}')">Acessar</button></div>`;
+                    hCom += `<div class="community-card"><div><h3>${d.nome}</h3><p>${d.descricao}</p></div><button onclick="listarProjetosDaComunidade('${doc.id}', '${d.nome}'); document.getElementById('global-search-input').value='';">Acessar</button></div>`;
                 }
             });
             document.getElementById('search-comunidades-grid').innerHTML = hCom || '<p class="loading-text">Nenhuma comunidade encontrada.</p>';
@@ -100,7 +115,7 @@ if(searchInput) {
             snapProj.forEach(doc => {
                 const d = doc.data();
                 if(d.titulo.toLowerCase().includes(termo) || d.descricao.toLowerCase().includes(termo)) {
-                    hProj += `<div class="community-card"><div><h3>${d.titulo}</h3><p>${d.descricao}</p></div><button onclick="abrirFeedProjeto('${doc.id}')">Acessar</button></div>`;
+                    hProj += `<div class="community-card"><div><h3>${d.titulo}</h3><p>${d.descricao}</p></div><button onclick="abrirFeedProjeto('${doc.id}'); document.getElementById('global-search-input').value='';">Acessar</button></div>`;
                 }
             });
             document.getElementById('search-projetos-grid').innerHTML = hProj || '<p class="loading-text">Nenhum projeto encontrado.</p>';
@@ -115,7 +130,7 @@ if(searchInput) {
             });
             document.getElementById('search-contas-list').innerHTML = hUsers || '<p class="loading-text">Nenhuma conta encontrada.</p>';
 
-        } catch(err) { console.error(err); }
+        } catch(err) {}
     });
 }
 
@@ -199,7 +214,6 @@ async function carregarPerfilUsuario(uid, email) {
 
             if (currentUserRole !== 'usuario') {
                 document.getElementById('admin-panel-link').classList.remove('hidden');
-                document.getElementById('mobile-admin-panel-link')?.classList.remove('hidden');
             }
             if (currentUserRole === 'programador' || currentUserRole === 'produtor') {
                 document.getElementById('tools-produtor').classList.remove('hidden'); document.getElementById('join-requests-container').classList.remove('hidden');
@@ -382,7 +396,6 @@ window.listarProjetosDaComunidade = async (comId, comNome) => {
         });
         document.getElementById('com-view-projects-mini').innerHTML = hProj;
 
-        // Fetch Posts para a Comunidade
         const qPosts = query(collection(db, "postagens"), orderBy("data_hora", "desc"), limit(200));
         const snapPosts = await getDocs(qPosts);
         comFeedPosts = [];
@@ -511,13 +524,13 @@ window.abrirFeedProjeto = async (projId, targetPostId = null) => {
         if (projDoc.exists()) {
             const data = projDoc.data();
             
-            // Trava de Privacidade
+            // Trava de Privacidade Real
             const isProgramador = currentUserRole === 'programador';
-            const isProdutor = currentUserRole === 'produtor'; // Precisa checar se ele é o dono real da com Pai em sistemas mais rigidos
+            const isProdutor = currentUserRole === 'produtor'; 
             const isAdmin = currentUserRole === 'admin';
             
             if(data.visibilidade === 'privado' && !isProgramador && !isProdutor && !isAdmin && !currentUserData?.acesso_comunidades?.includes(data.id_comunidade)) {
-                alert("Acesso restrito. Este projeto é privado.");
+                alert("Acesso restrito. Este projeto é privado e você não possui acesso a esta comunidade.");
                 goHome();
                 return;
             }
@@ -637,7 +650,7 @@ function processarTextoLinks(texto) {
     });
 }
 
-// BATCH MANAGEMENT (GESTÃO EM LOTE)
+// BATCH MANAGEMENT
 document.getElementById('batch-com-select')?.addEventListener('change', async (e) => {
     const comId = e.target.value; const uList = document.getElementById('batch-users-list'); const pList = document.getElementById('batch-projects-list');
     if(!comId) { uList.innerHTML = 'Selecione...'; pList.innerHTML = 'Selecione...'; return; }
@@ -721,7 +734,7 @@ async function carregarListaGerenciamento() {
         let html = '<h4 style="margin-top:20px; margin-bottom: 10px; color: var(--text-color);">Seus Projetos</h4>'; const snapProj = await getDocs(collection(db, "projetos"));
         snapProj.forEach(doc => { html += `<div class="user-card"><div class="user-info"><span class="user-email">${doc.data().titulo}</span></div><div class="user-actions"><button class="btn-sm btn-edit" onclick="editarDocumentoTextual('projetos', '${doc.id}', 'titulo')">Editar Título</button><button class="btn-sm btn-delete" onclick="excluirDocumento('projetos', '${doc.id}')">Excluir</button></div></div>`; });
         mList.innerHTML = html;
-    } catch (error) {}
+    } catch (error) { mList.innerHTML = '<p>Erro ao carregar dados.</p>'; }
 }
 
 async function carregarSolicitacoes() {
