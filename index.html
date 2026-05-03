@@ -13,7 +13,6 @@
 
     <div id="crm-layout">
         
-        <!-- BARRA LATERAL (Drawer no Mobile, Sidebar no PC) -->
         <aside id="sidebar" class="desktop-only expanded">
             <div class="sidebar-header">
                 <h2 class="sidebar-logo" id="logo-home-sidebar" style="cursor: pointer;"><span class="icon">🚀</span><span class="text">Plataforma</span></h2>
@@ -40,13 +39,19 @@
 
         <div id="main-wrapper">
             
-            <!-- HEADER FIXO MOBILE FIRST -->
             <header class="navbar">
                 <div class="navbar-content">
-                    <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
                         <button id="mobile-menu-toggle" class="mobile-only btn-hamburger">☰</button>
-                        <h1 id="logo-home-mobile" class="mobile-only" style="color: var(--primary-color); font-size: 1.25rem; cursor: pointer;">Plataforma</h1>
+                        <h1 id="logo-home-mobile" class="mobile-only" style="color: var(--primary-color); font-size: 1.25rem; cursor: pointer; margin-right: 15px;">Plataforma</h1>
+                        
+                        <!-- BARRA DE PESQUISA GLOBAL -->
+                        <div class="search-bar-wrapper hidden" id="global-search-wrapper">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" id="global-search-input" placeholder="Pesquisar comunidades, projetos ou contas...">
+                        </div>
                     </div>
+                    
                     <div id="user-info">
                         <div class="user-details">
                             <span id="user-name">Não logado</span>
@@ -80,14 +85,51 @@
                         </div>
                     </div>
 
-                    <!-- RAIO-X DO PROGRAMADOR (Injetado dinamicamente) -->
+                    <!-- TELA DE RESULTADOS DA PESQUISA -->
+                    <div id="search-results-view" class="hidden app-view">
+                        <h2 class="page-title">Resultados da Pesquisa</h2>
+                        <div class="tabs-container">
+                            <button class="tab-btn active" data-target="search-tab-comunidades">Comunidades</button>
+                            <button class="tab-btn" data-target="search-tab-projetos">Projetos</button>
+                            <button class="tab-btn" data-target="search-tab-contas">Contas</button>
+                        </div>
+                        
+                        <div id="search-tab-comunidades" class="tab-content active">
+                            <div id="search-comunidades-grid" class="community-grid"><p class="loading-text">Digite algo para pesquisar...</p></div>
+                        </div>
+                        <div id="search-tab-projetos" class="tab-content hidden">
+                            <div id="search-projetos-grid" class="community-grid"><p class="loading-text">Digite algo para pesquisar...</p></div>
+                        </div>
+                        <div id="search-tab-contas" class="tab-content hidden">
+                            <div id="search-contas-list" class="users-list"><p class="loading-text">Digite algo para pesquisar...</p></div>
+                        </div>
+                    </div>
+
                     <div id="programmer-intel-panel" class="hidden admin-form-container" style="background:#e0e7ff; border-color:#818cf8; margin-bottom: 20px; padding: 15px;"></div>
 
                     <div id="global-feed-view" class="hidden app-view">
                         <h2 class="page-title">Meu Feed</h2>
                         <p class="page-subtitle">Atualizações dos seus projetos.</p>
                         <div id="global-posts-container" class="posts-feed"><p class="loading-text">Carregando feed...</p></div>
-                        <button id="btn-load-more" class="btn-secondary hidden" style="width: 100%; margin-top: 20px;">Carregar mais postagens</button>
+                        <button id="btn-load-more-global" class="btn-secondary hidden" style="width: 100%; margin-top: 20px;">Carregar mais postagens</button>
+                    </div>
+
+                    <!-- NOVO: FEED DA COMUNIDADE (Comunidade + Projetos pequenos + Feed Cronológico) -->
+                    <div id="community-view" class="hidden app-view">
+                        <div class="feed-header" style="flex-direction: column; align-items: flex-start; gap: 10px; padding: 1.5rem;">
+                            <div>
+                                <h2 id="com-view-title" style="font-size: 1.6rem; font-weight: 800; color: var(--primary-color);">Carregando...</h2>
+                                <p id="com-view-desc" style="color: var(--text-light); font-size: 0.95rem; margin-top: 5px;">...</p>
+                            </div>
+                            
+                            <h4 style="font-size: 0.85rem; text-transform: uppercase; color: var(--text-light); margin-top: 15px; letter-spacing: 0.5px;">Projetos desta Comunidade</h4>
+                            <div id="com-view-projects-mini" class="mini-projects-wrapper">
+                                <p class="loading-text">Carregando projetos...</p>
+                            </div>
+                        </div>
+
+                        <div id="community-posts-container" class="posts-feed"><p class="loading-text">Carregando linha do tempo...</p></div>
+                        <button id="btn-load-more-community" class="btn-secondary hidden" style="width: 100%; margin-top: 20px;">Carregar mais postagens</button>
                     </div>
 
                     <div id="dynamic-content" class="hidden app-view">
@@ -109,6 +151,7 @@
                                 <button id="btn-edit-photo" class="btn-round hidden">✏️</button>
                             </div>
                             <div class="feed-info">
+                                <span id="feed-parent-community" style="font-size: 0.75rem; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px;">Comunidade XYZ</span>
                                 <h2 id="feed-title">Carregando...</h2>
                                 <p id="feed-desc">...</p>
                                 <div class="feed-stats">
@@ -120,13 +163,14 @@
 
                         <div id="post-creator" class="admin-form-container hidden">
                             <form id="form-post">
-                                <textarea id="post-text" placeholder="Compartilhe algo... (Youtube ou Links)" required></textarea>
+                                <textarea id="post-text" placeholder="Compartilhe algo neste projeto... (Youtube ou Links)" required></textarea>
                                 <input type="url" id="post-image-url" placeholder="URL da imagem (opcional)" class="file-input">
-                                <button type="submit">Publicar</button>
+                                <button type="submit">Publicar no Projeto</button>
                             </form>
                         </div>
 
                         <div id="posts-feed" class="posts-feed"><p class="loading-text">Carregando postagens...</p></div>
+                        <button id="btn-load-more-project" class="btn-secondary hidden" style="width: 100%; margin-top: 20px;">Carregar mais postagens</button>
                     </div>
                     
                     <div id="admin-panel" class="hidden app-view">
@@ -147,19 +191,33 @@
                                 </form>
                             </div>
 
-                            <!-- NOVO: Gestão em Lote (Batch Admin/Acessos) -->
+                            <div class="admin-form-container" style="border: 2px solid var(--primary-color);">
+                                <h3 style="color: var(--primary-color);">Editar Comunidade Existente</h3>
+                                <form id="form-edit-comunidade">
+                                    <select id="edit-com-select" required><option value="">Selecione...</option></select>
+                                    <input type="text" id="edit-com-nome" placeholder="Nome" required>
+                                    <textarea id="edit-com-desc" placeholder="Descrição" required></textarea>
+                                    <select id="edit-com-visibilidade" required>
+                                        <option value="publico">Pública</option>
+                                        <option value="privado">Privada</option>
+                                    </select>
+                                    <label style="font-size:0.85rem; font-weight:bold;">Admins (vírgula):</label>
+                                    <textarea id="edit-com-admins" placeholder="admin1@email.com, admin2..." required></textarea>
+                                    <label style="font-size:0.85rem; font-weight:bold;">Transferir Propriedade:</label>
+                                    <input type="email" id="edit-com-owner" placeholder="Novo Dono (Opcional)">
+                                    <button type="submit" class="btn-warning">Salvar Alterações</button>
+                                </form>
+                            </div>
+
                             <div class="admin-form-container" style="border: 2px solid var(--primary-color);">
                                 <h3 style="color: var(--primary-color);">Gestão em Lote (Membros e Projetos)</h3>
                                 <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 10px;">Atribua administradores a múltiplos projetos rapidamente.</p>
                                 <form id="form-batch-manage">
                                     <select id="batch-com-select" required><option value="">1. Selecione a Comunidade...</option></select>
-                                    
                                     <label class="form-label">2. Selecione os Membros:</label>
-                                    <div id="batch-users-list" class="checkbox-list"><span class="loading-text">Aguardando comunidade...</span></div>
-                                    
+                                    <div id="batch-users-list" class="checkbox-list"><span class="loading-text">Aguardando...</span></div>
                                     <label class="form-label">3. Selecione os Projetos (Feed):</label>
-                                    <div id="batch-projects-list" class="checkbox-list"><span class="loading-text">Aguardando comunidade...</span></div>
-                                    
+                                    <div id="batch-projects-list" class="checkbox-list"><span class="loading-text">Aguardando...</span></div>
                                     <button type="submit" class="btn-warning">Conceder Acesso Administrativo</button>
                                 </form>
                             </div>
@@ -185,7 +243,7 @@
                         </div>
 
                         <div class="admin-form-container">
-                            <h3>Gerenciar Dados e Propriedade</h3>
+                            <h3>Gerenciar Projetos</h3>
                             <div id="management-list" class="users-list"><p class="loading-text">Carregando...</p></div>
                         </div>
 
@@ -201,7 +259,6 @@
         </div>
     </div>
 
-    <!-- O BOTTOM NAV AGORA SÓ TEM AS ABAS DE NAVEGAÇÃO -->
     <nav id="mobile-bottom-nav" class="mobile-only hidden">
         <ul>
             <li><a href="#feed" id="mob-nav-feed" class="active"><span class="icon">📰</span><span class="text">Feed</span></a></li>
