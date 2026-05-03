@@ -24,7 +24,6 @@ body {
     display: none !important;
 }
 
-/* Header */
 .navbar {
     background-color: var(--primary-color);
     color: white;
@@ -44,7 +43,6 @@ body {
     color: white;
 }
 
-/* Container Principal */
 #app-container {
     display: flex;
     flex: 1;
@@ -117,27 +115,17 @@ body {
     font-weight: bold;
 }
 
-/* --- ESTRUTURA DESKTOP --- */
+/* --- ESTRUTURA DESKTOP E MOBILE --- */
 @media (min-width: 769px) {
-    .mobile-only {
-        display: none;
-    }
-
+    .mobile-only { display: none; }
     #sidebar {
         width: 250px;
         background-color: #fff;
         border-right: 1px solid #ddd;
         padding: 1rem;
     }
-
-    #sidebar ul {
-        list-style: none;
-    }
-
-    #sidebar ul li {
-        margin-bottom: 1rem;
-    }
-
+    #sidebar ul { list-style: none; }
+    #sidebar ul li { margin-bottom: 1rem; }
     #sidebar ul li a {
         text-decoration: none;
         color: var(--primary-color);
@@ -145,22 +133,15 @@ body {
     }
 }
 
-/* --- ESTRUTURA MOBILE --- */
 @media (max-width: 768px) {
-    .desktop-only {
-        display: none !important;
-    }
-
+    .desktop-only { display: none !important; }
     #content-area {
         padding: 1rem;
         padding-bottom: 70px;
     }
-
     #mobile-bottom-nav {
         position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
+        bottom: 0; left: 0; width: 100%;
         background-color: #fff;
         border-top: 1px solid #ddd;
         display: flex;
@@ -168,14 +149,10 @@ body {
         padding: 1rem 0;
         z-index: 1000;
     }
-
     #mobile-bottom-nav ul {
-        display: flex;
-        width: 100%;
-        justify-content: space-around;
-        list-style: none;
+        display: flex; width: 100%;
+        justify-content: space-around; list-style: none;
     }
-
     #mobile-bottom-nav ul li a {
         text-decoration: none;
         color: var(--primary-color);
@@ -194,33 +171,55 @@ body {
 }
 
 .admin-form-container form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin-top: 1rem;
+    display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;
 }
 
 .admin-form-container input, 
 .admin-form-container textarea,
 .admin-form-container select {
-    padding: 0.8rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 1rem;
-}
-
-.admin-form-container textarea {
-    resize: vertical;
-    min-height: 80px;
+    padding: 0.8rem; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem;
 }
 
 .admin-form-container button {
-    background-color: #28a745;
-    color: white;
-    border: none;
-    padding: 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 1rem;
+    background-color: #28a745; color: white; border: none;
+    padding: 1rem; border-radius: 4px; cursor: pointer;
+    font-weight: bold; font-size: 1rem;
 }
+
+/* --- GESTÃO DE USUÁRIOS (PROGRAMADOR) --- */
+.search-input {
+    width: 100%; margin-top: 1rem; margin-bottom: 1rem;
+}
+
+.users-list {
+    display: flex; flex-direction: column; gap: 10px;
+    max-height: 400px; overflow-y: auto;
+    border-top: 1px solid #eee; padding-top: 10px;
+}
+
+.user-card {
+    border: 1px solid #ddd; padding: 10px; border-radius: 4px;
+    display: flex; justify-content: space-between; align-items: center;
+    background: #fafafa;
+}
+
+@media (max-width: 600px) {
+    .user-card { flex-direction: column; align-items: flex-start; gap: 10px; }
+}
+
+.user-info { display: flex; flex-direction: column; gap: 5px; }
+.user-email { font-weight: bold; font-size: 0.95rem; }
+
+/* Etiquetas (Tags) */
+.tag {
+    padding: 4px 8px; border-radius: 12px; font-size: 0.75rem;
+    font-weight: bold; color: white; display: inline-block; width: max-content;
+}
+.tag-programador { background-color: #dc3545; } /* Vermelho */
+.tag-produtor { background-color: #fd7e14; }    /* Laranja */
+.tag-admin { background-color: #0d6efd; }       /* Azul */
+.tag-usuario { background-color: #198754; }     /* Verde */
+
+.user-actions { display: flex; gap: 10px; align-items: center; }
+.role-select-inline { padding: 5px; font-size: 0.85rem; }
+.btn-update-role { padding: 5px 10px !important; font-size: 0.85rem !important; }
