@@ -35,6 +35,7 @@ const toolsProdutor = document.getElementById('tools-produtor');
 const communityGrid = document.getElementById('community-grid');
 const searchUserInput = document.getElementById('search-user');
 const usersListContainer = document.getElementById('users-list-container');
+
 let allUsersData = []; 
 
 // UI Toggles
@@ -77,30 +78,65 @@ async function carregarPerfilUsuario(uid) {
             const userData = userDoc.data();
             const nivel = userData.role;
 
-            // Controle do Painel
             if (nivel === 'programador' || nivel === 'produtor' || nivel === 'admin') {
                 adminPanelLink.classList.remove('hidden');
+                carregarComunidadesSelects(userData.email, nivel);
             }
-            // Controle da Criação de Comunidades e Gestão de Admins
             if (nivel === 'programador' || nivel === 'produtor') {
                 toolsProdutor.classList.remove('hidden');
             } else {
                 toolsProdutor.classList.add('hidden');
             }
-            // Controle Master
             if (nivel === 'programador') {
                 masterAdminTools.classList.remove('hidden');
                 carregarListaDeUsuarios(); 
             } else {
                 masterAdminTools.classList.add('hidden');
             }
-
         }
     } catch (error) { console.error(error); }
 }
 
 // -----------------------------------------
-// AUTENTICAÇÃO E CADASTRO INTELIGENTE
+// POPULAR MENUS SUSPENSOS (SELECTS)
+// -----------------------------------------
+async function carregarComunidadesSelects(userEmail, role) {
+    const selectProjeto = document.getElementById('projeto-id-comunidade-select');
+    const selectAdmin = document.getElementById('add-admin-select');
+
+    if(!selectProjeto || !selectAdmin) return;
+
+    selectProjeto.innerHTML = '<option value="">Carregando...</option>';
+    selectAdmin.innerHTML = '<option value="">Carregando...</option>';
+
+    try {
+        let q;
+        if (role === 'programador') {
+            q = collection(db, "comunidades");
+        } else {
+            q = query(collection(db, "comunidades"), where("admins_emails", "array-contains", userEmail));
+        }
+
+        const snapshot = await getDocs(q);
+        let optionsHTML = '<option value="">Selecione a Comunidade...</option>';
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            optionsHTML += `<option value="${doc.id}">${data.nome}</option>`;
+        });
+
+        selectProjeto.innerHTML = optionsHTML;
+        selectAdmin.innerHTML = optionsHTML;
+
+    } catch (error) {
+        console.error("Erro ao carregar selects:", error);
+        selectProjeto.innerHTML = '<option value="">Erro ao carregar</option>';
+        selectAdmin.innerHTML = '<option value="">Erro ao carregar</option>';
+    }
+}
+
+// -----------------------------------------
+// AUTENTICAÇÃO
 // -----------------------------------------
 document.getElementById('form-login').addEventListener('submit', (e) => {
     e.preventDefault();
@@ -119,13 +155,12 @@ document.getElementById('form-register').addEventListener('submit', async (e) =>
         const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
         const user = userCredential.user;
 
-        // VERIFICAÇÃO DE CONVITE: Checa se o e-mail está listado como admin em alguma comunidade
         let cargoInicial = 'usuario';
         const q = query(collection(db, "comunidades"), where("admins_emails", "array-contains", email));
         const querySnapshot = await getDocs(q);
         
         if (!querySnapshot.empty) {
-            cargoInicial = 'admin'; // Nasce como admin pois foi convidado previamente
+            cargoInicial = 'admin'; 
         }
 
         await setDoc(doc(db, "users", user.uid), {
@@ -159,7 +194,6 @@ async function carregarVitrineComunidades() {
             card.innerHTML = `
                 <div>
                     <h3>${data.nome}</h3>
-                    <span class="card-id">ID: ${doc.id}</span>
                     <p>${data.descricao}</p>
                 </div>
                 <button onclick="acessarComunidade('${doc.id}')">Acessar Conteúdo</button>
@@ -173,7 +207,7 @@ async function carregarVitrineComunidades() {
 }
 
 window.acessarComunidade = (id) => {
-    alert("Função de acesso em desenvolvimento para o ID: " + id + "\nNo futuro, isso checará se você tem permissão ou exibirá o link de compra.");
+    alert("Função de acesso em desenvolvimento para a comunidade: " + id);
 };
 
 // -----------------------------------------
@@ -183,38 +217,37 @@ document.getElementById('form-comunidade').addEventListener('submit', async (e) 
     e.preventDefault();
     const btn = e.target.querySelector('button'); btn.textContent = 'Salvando...'; btn.disabled = true;
     try {
-        const docRef = await addDoc(collection(db, "comunidades"), {
+        await addDoc(collection(db, "comunidades"), {
             nome: document.getElementById('comunidade-nome').value, 
             descricao: document.getElementById('comunidade-desc').value, 
             id_criador: auth.currentUser.uid,
-            admins_emails: [auth.currentUser.email] // O criador já nasce na lista de admins
+            admins_emails: [auth.currentUser.email] 
         });
-        alert(`Comunidade criada!\nGuarde o ID: ${docRef.id}`);
-        e.target.reset(); carregarVitrineComunidades();
+        alert(`Comunidade criada com sucesso!`);
+        e.target.reset(); 
+        carregarVitrineComunidades();
+        carregarComunidadesSelects(auth.currentUser.email, 'produtor'); // Atualiza a lista do menu
     } catch (error) { alert("Erro: " + error.message); } 
     finally { btn.textContent = 'Salvar Comunidade'; btn.disabled = false; }
 });
 
-// Formulário: Adicionar Administrador à Comunidade (Produtores)
 document.getElementById('form-add-admin').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const comId = document.getElementById('add-admin-id').value;
+    const comId = document.getElementById('add-admin-select').value;
     const adminEmail = document.getElementById('add-admin-email').value;
     const btn = e.target.querySelector('button'); btn.textContent = 'Processando...'; btn.disabled = true;
 
     try {
-        // 1. Grava o e-mail no array da comunidade
         const comRef = doc(db, "comunidades", comId);
         await updateDoc(comRef, { admins_emails: arrayUnion(adminEmail) });
 
-        // 2. Tenta achar o usuário para promover imediatamente
         const q = query(collection(db, "users"), where("email", "==", adminEmail));
         const querySnapshot = await getDocs(q);
         
         if (!querySnapshot.empty) {
             querySnapshot.forEach(async (userDoc) => {
                 const userData = userDoc.data();
-                if(userData.role === 'usuario') { // Só sobe pra admin se for usuário comum
+                if(userData.role === 'usuario') { 
                     await updateDoc(doc(db, "users", userDoc.id), { role: 'admin' });
                 }
             });
@@ -224,7 +257,7 @@ document.getElementById('form-add-admin').addEventListener('submit', async (e) =
         }
         e.target.reset();
     } catch (error) {
-        alert("Erro. Verifique se o ID da comunidade está correto. " + error.message);
+        alert("Erro ao adicionar admin: " + error.message);
     } finally {
         btn.textContent = 'Nomear Administrador'; btn.disabled = false;
     }
@@ -236,7 +269,7 @@ document.getElementById('form-projeto').addEventListener('submit', async (e) => 
     try {
         await addDoc(collection(db, "projetos"), {
             titulo: document.getElementById('projeto-titulo').value, 
-            id_comunidade: document.getElementById('projeto-id-comunidade').value, 
+            id_comunidade: document.getElementById('projeto-id-comunidade-select').value, 
             conteudo_url: document.getElementById('projeto-url').value
         });
         alert("Projeto salvo com sucesso!"); e.target.reset();
