@@ -38,6 +38,7 @@ const db = getFirestore(app);
 const loginBtn = document.getElementById('login-btn');
 const userEmailSpan = document.getElementById('user-email');
 const adminPanelLink = document.getElementById('admin-panel-link');
+const mobileAdminPanelLink = document.getElementById('mobile-admin-panel-link');
 const dynamicContent = document.getElementById('dynamic-content');
 
 // Observador de Estado: Verifica se o usuário está logado ou não
@@ -49,7 +50,8 @@ onAuthStateChanged(auth, async (user) => {
     } else {
         userEmailSpan.textContent = 'Não logado';
         loginBtn.textContent = 'Entrar';
-        adminPanelLink.style.display = 'none';
+        if(adminPanelLink) adminPanelLink.style.display = 'none';
+        if(mobileAdminPanelLink) mobileAdminPanelLink.style.display = 'none';
         dynamicContent.innerHTML = '<h2>Bem-vindo à plataforma</h2><p>Faça login com seu e-mail para acessar seus projetos.</p>';
     }
 });
@@ -63,14 +65,14 @@ async function carregarPerfilUsuario(uid) {
         if (userDoc.exists()) {
             const userData = userDoc.data();
             
-            // Libera painel de controle se for admin ou produtor
+            // Libera painel de controle se for admin ou produtor (em ambos os menus)
             if (userData.role === 'admin' || userData.role === 'produtor') {
-                adminPanelLink.style.display = 'block';
+                if(adminPanelLink) adminPanelLink.style.display = 'block';
+                if(mobileAdminPanelLink) mobileAdminPanelLink.style.display = 'block';
             }
 
             dynamicContent.innerHTML = `<h2>Área de Projetos</h2><p>Carregando os módulos que você possui acesso...</p>`;
         } else {
-            // Se o usuário logar mas não tiver documento no Firestore ainda
             dynamicContent.innerHTML = `<h2>Acesso Restrito</h2><p>Sua conta existe, mas você ainda não possui permissões ou módulos liberados.</p>`;
         }
     } catch (error) {
