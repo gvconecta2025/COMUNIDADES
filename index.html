@@ -13,40 +13,45 @@
 
     <div id="crm-layout">
         
-        <!-- BARRA LATERAL (PC) -->
-        <aside id="sidebar" class="desktop-only hidden expanded">
+        <!-- BARRA LATERAL (Drawer no Mobile, Sidebar no PC) -->
+        <aside id="sidebar" class="desktop-only expanded">
             <div class="sidebar-header">
                 <h2 class="sidebar-logo" id="logo-home-sidebar" style="cursor: pointer;"><span class="icon">🚀</span><span class="text">Plataforma</span></h2>
-                <button id="sidebar-toggle" title="Recolher/Expandir Menu">☰</button>
+                <button id="sidebar-toggle" class="desktop-only" title="Recolher Menu">☰</button>
+                <button id="mobile-close-sidebar" class="mobile-only" title="Fechar">✖</button>
             </div>
             <nav>
                 <ul>
                     <li><a href="#feed" id="nav-feed" title="Meu Feed" class="active"><span class="icon">📰</span> <span class="text">Meu Feed</span></a></li>
                     <li><a href="#comunidades" id="nav-comunidades" title="Explorar"><span class="icon">🌍</span> <span class="text">Explorar</span></a></li>
                     <li><a href="#projetos" id="nav-projetos" title="Meus Projetos"><span class="icon">📂</span> <span class="text">Meus Projetos</span></a></li>
-                    <li id="admin-panel-link" class="hidden"><a href="#admin" id="nav-admin" title="Painel de Controle"><span class="icon">⚙️</span> <span class="text">Painel</span></a></li>
+                    <li id="admin-panel-link" class="hidden"><a href="#admin" id="nav-admin" title="Painel de Controle"><span class="icon">⚙️</span> <span class="text">Painel de Controle</span></a></li>
                 </ul>
                 <ul id="sidebar-dynamic-section" class="hidden">
                     <li class="sidebar-divider"></li>
                     <li class="sidebar-title"><span class="text">MINHAS COMUNIDADES</span></li>
                     <div id="sidebar-communities-list"></div>
                 </ul>
+                <div class="sidebar-footer">
+                    <button id="logout-btn" class="hidden btn-logout"><span class="icon">🚪</span> <span class="text">Sair da Conta</span></button>
+                </div>
             </nav>
         </aside>
 
         <div id="main-wrapper">
             
-            <!-- HEADER FIXO (MOBILE E PC) -->
+            <!-- HEADER FIXO MOBILE FIRST -->
             <header class="navbar">
                 <div class="navbar-content">
-                    <h1 id="logo-home-mobile" class="mobile-only" style="color: var(--primary-color); font-size: 1.25rem; cursor: pointer;">Plataforma</h1>
-                    <div class="desktop-only"></div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button id="mobile-menu-toggle" class="mobile-only btn-hamburger">☰</button>
+                        <h1 id="logo-home-mobile" class="mobile-only" style="color: var(--primary-color); font-size: 1.25rem; cursor: pointer;">Plataforma</h1>
+                    </div>
                     <div id="user-info">
                         <div class="user-details">
                             <span id="user-name">Não logado</span>
                             <div id="user-badges" class="user-badges"></div>
                         </div>
-                        <button id="logout-btn" class="hidden">Sair</button>
                     </div>
                 </div>
             </header>
@@ -54,7 +59,6 @@
             <section id="content-area">
                 <div class="content-50">
                     
-                    <!-- AUTH -->
                     <div id="auth-container">
                         <div id="login-box" class="auth-box">
                             <h2>Bem-vindo</h2>
@@ -65,7 +69,6 @@
                             </form>
                             <p>Não tem conta? <a href="#" id="link-show-register">Cadastre-se aqui</a></p>
                         </div>
-
                         <div id="register-box" class="auth-box hidden">
                             <h2>Criar Conta</h2>
                             <form id="form-register">
@@ -77,31 +80,28 @@
                         </div>
                     </div>
 
-                    <!-- MEU FEED -->
+                    <!-- RAIO-X DO PROGRAMADOR (Injetado dinamicamente) -->
+                    <div id="programmer-intel-panel" class="hidden admin-form-container" style="background:#e0e7ff; border-color:#818cf8; margin-bottom: 20px; padding: 15px;"></div>
+
                     <div id="global-feed-view" class="hidden app-view">
                         <h2 class="page-title">Meu Feed</h2>
                         <p class="page-subtitle">Atualizações dos seus projetos.</p>
-                        <div id="global-posts-container" class="posts-feed">
-                            <p class="loading-text">Carregando feed...</p>
-                        </div>
+                        <div id="global-posts-container" class="posts-feed"><p class="loading-text">Carregando feed...</p></div>
                         <button id="btn-load-more" class="btn-secondary hidden" style="width: 100%; margin-top: 20px;">Carregar mais postagens</button>
                     </div>
 
-                    <!-- EXPLORAR -->
                     <div id="dynamic-content" class="hidden app-view">
                         <h2 id="dynamic-title" class="page-title">Explorar</h2>
                         <p id="dynamic-subtitle" class="page-subtitle">Encontre novas comunidades.</p>
                         <div id="communities-container"></div>
                     </div>
 
-                    <!-- MEUS PROJETOS -->
                     <div id="my-projects-view" class="hidden app-view">
                         <h2 class="page-title">Meus Projetos</h2>
                         <p class="page-subtitle">Sua biblioteca de conteúdos ativos.</p>
                         <div id="my-projects-container"></div>
                     </div>
 
-                    <!-- FEED DO PROJETO -->
                     <div id="project-view" class="hidden app-view">
                         <div class="feed-header">
                             <div class="feed-photo-container">
@@ -126,12 +126,9 @@
                             </form>
                         </div>
 
-                        <div id="posts-feed" class="posts-feed">
-                            <p class="loading-text">Carregando postagens...</p>
-                        </div>
+                        <div id="posts-feed" class="posts-feed"><p class="loading-text">Carregando postagens...</p></div>
                     </div>
                     
-                    <!-- PAINEL -->
                     <div id="admin-panel" class="hidden app-view">
                         <h2 class="page-title">Painel de Controle</h2>
                         <p class="page-subtitle">Gestão de conteúdo.</p>
@@ -150,21 +147,20 @@
                                 </form>
                             </div>
 
+                            <!-- NOVO: Gestão em Lote (Batch Admin/Acessos) -->
                             <div class="admin-form-container" style="border: 2px solid var(--primary-color);">
-                                <h3 style="color: var(--primary-color);">Editar Comunidade Existente</h3>
-                                <form id="form-edit-comunidade">
-                                    <select id="edit-com-select" required><option value="">Selecione...</option></select>
-                                    <input type="text" id="edit-com-nome" placeholder="Nome" required>
-                                    <textarea id="edit-com-desc" placeholder="Descrição" required></textarea>
-                                    <select id="edit-com-visibilidade" required>
-                                        <option value="publico">Pública</option>
-                                        <option value="privado">Privada</option>
-                                    </select>
-                                    <label style="font-size:0.85rem; font-weight:bold;">Admins (vírgula):</label>
-                                    <textarea id="edit-com-admins" placeholder="admin1@email.com, admin2..." required></textarea>
-                                    <label style="font-size:0.85rem; font-weight:bold;">Transferir Propriedade:</label>
-                                    <input type="email" id="edit-com-owner" placeholder="Novo Dono (Opcional)">
-                                    <button type="submit" class="btn-warning">Salvar Alterações</button>
+                                <h3 style="color: var(--primary-color);">Gestão em Lote (Membros e Projetos)</h3>
+                                <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 10px;">Atribua administradores a múltiplos projetos rapidamente.</p>
+                                <form id="form-batch-manage">
+                                    <select id="batch-com-select" required><option value="">1. Selecione a Comunidade...</option></select>
+                                    
+                                    <label class="form-label">2. Selecione os Membros:</label>
+                                    <div id="batch-users-list" class="checkbox-list"><span class="loading-text">Aguardando comunidade...</span></div>
+                                    
+                                    <label class="form-label">3. Selecione os Projetos (Feed):</label>
+                                    <div id="batch-projects-list" class="checkbox-list"><span class="loading-text">Aguardando comunidade...</span></div>
+                                    
+                                    <button type="submit" class="btn-warning">Conceder Acesso Administrativo</button>
                                 </form>
                             </div>
                         </div>
@@ -189,12 +185,12 @@
                         </div>
 
                         <div class="admin-form-container">
-                            <h3>Gerenciar Projetos</h3>
+                            <h3>Gerenciar Dados e Propriedade</h3>
                             <div id="management-list" class="users-list"><p class="loading-text">Carregando...</p></div>
                         </div>
 
                         <div id="master-admin-tools" class="admin-form-container hidden">
-                            <h3>Gestão de Usuários</h3>
+                            <h3>Gestão de Usuários Master</h3>
                             <input type="text" id="search-user" class="search-input" placeholder="Pesquisar usuário...">
                             <div id="users-list-container" class="users-list"></div>
                         </div>
@@ -205,13 +201,12 @@
         </div>
     </div>
 
-    <!-- NAVEGAÇÃO APP MOBILE -->
+    <!-- O BOTTOM NAV AGORA SÓ TEM AS ABAS DE NAVEGAÇÃO -->
     <nav id="mobile-bottom-nav" class="mobile-only hidden">
         <ul>
             <li><a href="#feed" id="mob-nav-feed" class="active"><span class="icon">📰</span><span class="text">Feed</span></a></li>
             <li><a href="#comunidades" id="mob-nav-comunidades"><span class="icon">🌍</span><span class="text">Explorar</span></a></li>
             <li><a href="#projetos" id="mob-nav-projetos"><span class="icon">📂</span><span class="text">Projetos</span></a></li>
-            <li id="mobile-admin-panel-link" class="hidden"><a href="#admin" id="mob-nav-admin"><span class="icon">⚙️</span><span class="text">Painel</span></a></li>
         </ul>
     </nav>
 
