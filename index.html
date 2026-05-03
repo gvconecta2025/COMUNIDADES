@@ -13,7 +13,6 @@
 
     <div id="crm-layout">
         
-        <!-- BARRA LATERAL CRM (Escura e Retrátil) -->
         <aside id="sidebar" class="desktop-only hidden expanded">
             <div class="sidebar-header">
                 <h2 class="sidebar-logo"><span class="icon">🚀</span><span class="text">Plataforma</span></h2>
@@ -28,13 +27,12 @@
             </nav>
         </aside>
 
-        <!-- ÁREA DIREITA (Cabeçalho Branco + Conteúdo 50%) -->
         <div id="main-wrapper">
             
             <header class="navbar">
                 <div class="navbar-content">
                     <h1 class="mobile-only" style="color: var(--primary-color); font-size: 1.2rem;">Plataforma</h1>
-                    <div class="desktop-only"></div> <!-- Espaçador para o PC -->
+                    <div class="desktop-only"></div>
                     <div id="user-info">
                         <span id="user-email">Não logado</span>
                         <button id="logout-btn" class="hidden">Sair</button>
@@ -44,7 +42,6 @@
 
             <section id="content-area">
                 
-                <!-- CONTAINER CENTRAL DE 50% -->
                 <div class="content-50">
                     
                     <div id="auth-container">
@@ -69,11 +66,18 @@
                         </div>
                     </div>
 
-                    <!-- Vitrine -->
+                    <!-- Vitrine de Comunidades -->
                     <div id="dynamic-content" class="hidden">
                         <h2 id="dynamic-title" class="page-title">Comunidades</h2>
                         <p id="dynamic-subtitle" class="page-subtitle">Acesse ou explore novas comunidades.</p>
                         <div id="communities-container"></div>
+                    </div>
+
+                    <!-- NOVA ABA: Meus Projetos -->
+                    <div id="my-projects-view" class="hidden">
+                        <h2 class="page-title">Meus Projetos</h2>
+                        <p class="page-subtitle">Acesso direto aos seus módulos e feeds ativos.</p>
+                        <div id="my-projects-container"></div>
                     </div>
 
                     <!-- Feed do Projeto -->
@@ -165,7 +169,6 @@
         </div>
     </div>
 
-    <!-- Menu Inferior Mobile Permanece Intacto -->
     <nav id="mobile-bottom-nav" class="mobile-only hidden">
         <ul>
             <li><a href="#comunidades">Comunidades</a></li>
