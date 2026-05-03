@@ -7,149 +7,165 @@
     
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
-    <meta name="theme-color" content="#4f46e5">
+    <meta name="theme-color" content="#0f172a">
 </head>
 <body>
-    <header class="navbar">
-        <div class="navbar-content">
-            <h1>Plataforma</h1>
-            <div id="user-info">
-                <span id="user-email">Não logado</span>
-                <button id="logout-btn" class="hidden">Sair</button>
-            </div>
-        </div>
-    </header>
 
-    <main id="app-container">
+    <div id="crm-layout">
         
-        <aside id="sidebar" class="desktop-only hidden">
+        <!-- BARRA LATERAL CRM (Escura e Retrátil) -->
+        <aside id="sidebar" class="desktop-only hidden expanded">
+            <div class="sidebar-header">
+                <h2 class="sidebar-logo"><span class="icon">🚀</span><span class="text">Plataforma</span></h2>
+                <button id="sidebar-toggle" title="Recolher/Expandir Menu">☰</button>
+            </div>
             <nav>
                 <ul>
-                    <li><a href="#comunidades" id="nav-comunidades">Comunidades</a></li>
-                    <li><a href="#projetos" id="nav-projetos">Meus Projetos</a></li>
-                    <li id="admin-panel-link" class="hidden"><a href="#admin" id="nav-admin">Painel de Controle</a></li>
+                    <li><a href="#comunidades" id="nav-comunidades" title="Comunidades"><span class="icon">🏘️</span> <span class="text">Comunidades</span></a></li>
+                    <li><a href="#projetos" id="nav-projetos" title="Meus Projetos"><span class="icon">📂</span> <span class="text">Meus Projetos</span></a></li>
+                    <li id="admin-panel-link" class="hidden"><a href="#admin" id="nav-admin" title="Painel de Controle"><span class="icon">⚙️</span> <span class="text">Painel</span></a></li>
                 </ul>
             </nav>
         </aside>
 
-        <section id="content-area">
+        <!-- ÁREA DIREITA (Cabeçalho Branco + Conteúdo 50%) -->
+        <div id="main-wrapper">
             
-            <div id="auth-container">
-                <div id="login-box" class="auth-box">
-                    <h2>Bem-vindo de volta</h2>
-                    <form id="form-login">
-                        <input type="email" id="login-email" placeholder="E-mail" required>
-                        <input type="password" id="login-pass" placeholder="Senha" required>
-                        <button type="submit">Entrar</button>
-                    </form>
-                    <p>Não tem conta? <a href="#" id="link-show-register">Cadastre-se aqui</a></p>
-                </div>
-
-                <div id="register-box" class="auth-box hidden">
-                    <h2>Criar Conta</h2>
-                    <form id="form-register">
-                        <input type="email" id="reg-email" placeholder="E-mail" required>
-                        <input type="password" id="reg-pass" placeholder="Senha (Mín. 6 caracteres)" required>
-                        <button type="submit">Cadastrar</button>
-                    </form>
-                    <p>Já tem conta? <a href="#" id="link-show-login">Faça Login</a></p>
-                </div>
-            </div>
-
-            <!-- Vitrine -->
-            <div id="dynamic-content" class="hidden">
-                <h2 id="dynamic-title" class="page-title">Comunidades</h2>
-                <p id="dynamic-subtitle" class="page-subtitle">Acesse ou explore novas comunidades na plataforma.</p>
-                <div id="communities-container"></div>
-            </div>
-
-            <!-- Feed do Projeto -->
-            <div id="project-view" class="hidden">
-                <div class="feed-header">
-                    <div class="feed-photo-container">
-                        <img src="https://via.placeholder.com/150" id="feed-photo" class="circular-photo" alt="Foto do Projeto">
-                        <button id="btn-edit-photo" class="btn-round hidden">✏️</button>
+            <header class="navbar">
+                <div class="navbar-content">
+                    <h1 class="mobile-only" style="color: var(--primary-color); font-size: 1.2rem;">Plataforma</h1>
+                    <div class="desktop-only"></div> <!-- Espaçador para o PC -->
+                    <div id="user-info">
+                        <span id="user-email">Não logado</span>
+                        <button id="logout-btn" class="hidden">Sair</button>
                     </div>
-                    <div class="feed-info">
-                        <h2 id="feed-title">Carregando...</h2>
-                        <p id="feed-desc">...</p>
-                        <div class="feed-stats">
-                            <span id="feed-followers">0</span> Seguidores &nbsp;&bull;&nbsp; 
-                            <span id="feed-members">0</span> Membros
+                </div>
+            </header>
+
+            <section id="content-area">
+                
+                <!-- CONTAINER CENTRAL DE 50% -->
+                <div class="content-50">
+                    
+                    <div id="auth-container">
+                        <div id="login-box" class="auth-box">
+                            <h2>Bem-vindo de volta</h2>
+                            <form id="form-login">
+                                <input type="email" id="login-email" placeholder="E-mail" required>
+                                <input type="password" id="login-pass" placeholder="Senha" required>
+                                <button type="submit">Entrar</button>
+                            </form>
+                            <p>Não tem conta? <a href="#" id="link-show-register">Cadastre-se aqui</a></p>
+                        </div>
+
+                        <div id="register-box" class="auth-box hidden">
+                            <h2>Criar Conta</h2>
+                            <form id="form-register">
+                                <input type="email" id="reg-email" placeholder="E-mail" required>
+                                <input type="password" id="reg-pass" placeholder="Senha (Mín. 6 caracteres)" required>
+                                <button type="submit">Cadastrar</button>
+                            </form>
+                            <p>Já tem conta? <a href="#" id="link-show-login">Faça Login</a></p>
                         </div>
                     </div>
-                </div>
 
-                <div id="post-creator" class="admin-form-container hidden">
-                    <form id="form-post">
-                        <textarea id="post-text" placeholder="O que você quer compartilhar? Cole links do YouTube para vídeos embutidos." required></textarea>
-                        <input type="url" id="post-image-url" placeholder="URL de uma imagem (opcional)" class="file-input">
-                        <button type="submit">Publicar</button>
-                    </form>
-                </div>
-
-                <div id="posts-feed" class="posts-feed">
-                    <p class="loading-text">Carregando postagens...</p>
-                </div>
-            </div>
-            
-            <!-- Painel de Controle -->
-            <div id="admin-panel" class="hidden">
-                <h2 class="page-title">Painel de Controle</h2>
-                <p class="page-subtitle">Gerenciamento inteligente de conteúdo.</p>
-                
-                <div id="tools-produtor" class="hidden">
-                    <div class="admin-form-container">
-                        <h3>Criar Nova Comunidade</h3>
-                        <form id="form-comunidade">
-                            <input type="text" id="comunidade-nome" placeholder="Nome da Comunidade" required>
-                            <textarea id="comunidade-desc" placeholder="Descrição da comunidade" required></textarea>
-                            <button type="submit">Salvar Comunidade</button>
-                        </form>
+                    <!-- Vitrine -->
+                    <div id="dynamic-content" class="hidden">
+                        <h2 id="dynamic-title" class="page-title">Comunidades</h2>
+                        <p id="dynamic-subtitle" class="page-subtitle">Acesse ou explore novas comunidades.</p>
+                        <div id="communities-container"></div>
                     </div>
 
-                    <div class="admin-form-container">
-                        <h3>Adicionar Administrador à Comunidade</h3>
-                        <form id="form-add-admin">
-                            <select id="add-admin-select" required>
-                                <option value="">Selecione a Comunidade...</option>
-                            </select>
-                            <input type="email" id="add-admin-email" placeholder="E-mail do Administrador" required>
-                            <button type="submit" class="btn-secondary">Nomear Administrador</button>
-                        </form>
+                    <!-- Feed do Projeto -->
+                    <div id="project-view" class="hidden">
+                        <div class="feed-header">
+                            <div class="feed-photo-container">
+                                <img src="https://via.placeholder.com/150" id="feed-photo" class="circular-photo" alt="Foto do Projeto">
+                                <button id="btn-edit-photo" class="btn-round hidden">✏️</button>
+                            </div>
+                            <div class="feed-info">
+                                <h2 id="feed-title">Carregando...</h2>
+                                <p id="feed-desc">...</p>
+                                <div class="feed-stats">
+                                    <span id="feed-followers">0</span> Seguidores &nbsp;&bull;&nbsp; 
+                                    <span id="feed-members">0</span> Membros
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="post-creator" class="admin-form-container hidden">
+                            <form id="form-post">
+                                <textarea id="post-text" placeholder="O que você quer compartilhar? Cole links do YouTube para vídeos embutidos." required></textarea>
+                                <input type="url" id="post-image-url" placeholder="URL de uma imagem (opcional)" class="file-input">
+                                <button type="submit">Publicar</button>
+                            </form>
+                        </div>
+
+                        <div id="posts-feed" class="posts-feed">
+                            <p class="loading-text">Carregando postagens...</p>
+                        </div>
                     </div>
-                </div>
+                    
+                    <!-- Painel de Controle -->
+                    <div id="admin-panel" class="hidden">
+                        <h2 class="page-title">Painel de Controle</h2>
+                        <p class="page-subtitle">Gerenciamento inteligente de conteúdo.</p>
+                        
+                        <div id="tools-produtor" class="hidden">
+                            <div class="admin-form-container">
+                                <h3>Criar Nova Comunidade</h3>
+                                <form id="form-comunidade">
+                                    <input type="text" id="comunidade-nome" placeholder="Nome da Comunidade" required>
+                                    <textarea id="comunidade-desc" placeholder="Descrição da comunidade" required></textarea>
+                                    <button type="submit">Salvar Comunidade</button>
+                                </form>
+                            </div>
 
-                <div class="admin-form-container">
-                    <h3>Criar Novo Projeto (Feed)</h3>
-                    <form id="form-projeto">
-                        <input type="text" id="projeto-titulo" placeholder="Nome do Projeto" required>
-                        <textarea id="projeto-desc" placeholder="Descrição do projeto" required></textarea>
-                        <select id="projeto-id-comunidade-select" required>
-                            <option value="">Selecione a Comunidade...</option>
-                        </select>
-                        <button type="submit">Salvar Projeto</button>
-                    </form>
-                </div>
+                            <div class="admin-form-container">
+                                <h3>Adicionar Administrador à Comunidade</h3>
+                                <form id="form-add-admin">
+                                    <select id="add-admin-select" required>
+                                        <option value="">Selecione a Comunidade...</option>
+                                    </select>
+                                    <input type="email" id="add-admin-email" placeholder="E-mail do Administrador" required>
+                                    <button type="submit" class="btn-secondary">Nomear Administrador</button>
+                                </form>
+                            </div>
+                        </div>
 
-                <div class="admin-form-container">
-                    <h3>Gerenciar Conteúdos Existentes</h3>
-                    <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 15px;">Edite ou exclua suas Comunidades e Projetos.</p>
-                    <div id="management-list" class="users-list">
-                        <p class="loading-text">Carregando seus conteúdos...</p>
+                        <div class="admin-form-container">
+                            <h3>Criar Novo Projeto (Feed)</h3>
+                            <form id="form-projeto">
+                                <input type="text" id="projeto-titulo" placeholder="Nome do Projeto" required>
+                                <textarea id="projeto-desc" placeholder="Descrição do projeto" required></textarea>
+                                <select id="projeto-id-comunidade-select" required>
+                                    <option value="">Selecione a Comunidade...</option>
+                                </select>
+                                <button type="submit">Salvar Projeto</button>
+                            </form>
+                        </div>
+
+                        <div class="admin-form-container">
+                            <h3>Gerenciar Conteúdos Existentes</h3>
+                            <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 15px;">Edite ou exclua suas Comunidades e Projetos.</p>
+                            <div id="management-list" class="users-list">
+                                <p class="loading-text">Carregando seus conteúdos...</p>
+                            </div>
+                        </div>
+
+                        <div id="master-admin-tools" class="admin-form-container hidden">
+                            <h3>Gestão de Usuários e Acessos</h3>
+                            <input type="text" id="search-user" class="search-input" placeholder="Pesquisar usuário por e-mail...">
+                            <div id="users-list-container" class="users-list"></div>
+                        </div>
                     </div>
+
                 </div>
+            </section>
+        </div>
+    </div>
 
-                <div id="master-admin-tools" class="admin-form-container hidden">
-                    <h3>Gestão de Usuários e Acessos</h3>
-                    <input type="text" id="search-user" class="search-input" placeholder="Pesquisar usuário por e-mail...">
-                    <div id="users-list-container" class="users-list"></div>
-                </div>
-            </div>
-
-        </section>
-    </main>
-
+    <!-- Menu Inferior Mobile Permanece Intacto -->
     <nav id="mobile-bottom-nav" class="mobile-only hidden">
         <ul>
             <li><a href="#comunidades">Comunidades</a></li>
