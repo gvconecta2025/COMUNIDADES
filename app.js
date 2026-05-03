@@ -1,23 +1,12 @@
-// Registra o Service Worker (PWA para instalação no celular/PC)
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-                console.log('Service Worker registrado com sucesso');
-            })
-            .catch(error => {
-                console.log('Falha ao registrar o Service Worker:', error);
-            });
+        navigator.serviceWorker.register('/sw.js').catch(error => console.log('Falha SW:', error));
     });
 }
 
-// =========================================================
-// CONFIGURAÇÃO DO FIREBASE 
-// =========================================================
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAy6KKgoKOfpSeSw0rxk--AGdTvq0Y1L3M",
@@ -29,19 +18,30 @@ const firebaseConfig = {
   measurementId: "G-YLC6X0CCVD"
 };
 
-// Inicializa o Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Referências dos elementos HTML
 const loginBtn = document.getElementById('login-btn');
 const userEmailSpan = document.getElementById('user-email');
 const adminPanelLink = document.getElementById('admin-panel-link');
-const mobileAdminPanelLink = document.getElementById('mobile-admin-panel-link');
 const dynamicContent = document.getElementById('dynamic-content');
+const adminPanel = document.getElementById('admin-panel');
 
-// Observador de Estado: Verifica se o usuário está logado ou não
+// Navegação do Menu
+document.getElementById('nav-admin').addEventListener('click', (e) => {
+    e.preventDefault();
+    dynamicContent.classList.add('hidden');
+    adminPanel.classList.remove('hidden');
+});
+
+document.getElementById('nav-comunidades').addEventListener('click', (e) => {
+    e.preventDefault();
+    adminPanel.classList.add('hidden');
+    dynamicContent.classList.remove('hidden');
+});
+
+// Observador de Estado
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         userEmailSpan.textContent = user.email;
@@ -50,13 +50,13 @@ onAuthStateChanged(auth, async (user) => {
     } else {
         userEmailSpan.textContent = 'Não logado';
         loginBtn.textContent = 'Entrar';
-        if(adminPanelLink) adminPanelLink.style.display = 'none';
-        if(mobileAdminPanelLink) mobileAdminPanelLink.style.display = 'none';
-        dynamicContent.innerHTML = '<h2>Bem-vindo à plataforma</h2><p>Faça login com seu e-mail para acessar seus projetos.</p>';
+        adminPanelLink.style.display = 'none';
+        adminPanel.classList.add('hidden');
+        dynamicContent.classList.remove('hidden');
+        dynamicContent.innerHTML = '<h2>Bem-vindo à plataforma</h2><p>Faça login para acessar.</p>';
     }
 });
 
-// Busca o nível de acesso (role) e permissões no Banco de Dados
 async function carregarPerfilUsuario(uid) {
     try {
         const userDocRef = doc(db, "users", uid);
@@ -65,34 +65,86 @@ async function carregarPerfilUsuario(uid) {
         if (userDoc.exists()) {
             const userData = userDoc.data();
             
-            // Libera painel de controle se for admin ou produtor (em ambos os menus)
             if (userData.role === 'admin' || userData.role === 'produtor') {
-                if(adminPanelLink) adminPanelLink.style.display = 'block';
-                if(mobileAdminPanelLink) mobileAdminPanelLink.style.display = 'block';
+                adminPanelLink.style.display = 'block';
             }
-
-            dynamicContent.innerHTML = `<h2>Área de Projetos</h2><p>Carregando os módulos que você possui acesso...</p>`;
+            dynamicContent.innerHTML = `<h2>Minhas Comunidades</h2><p>Carregando...</p>`;
         } else {
-            dynamicContent.innerHTML = `<h2>Acesso Restrito</h2><p>Sua conta existe, mas você ainda não possui permissões ou módulos liberados.</p>`;
+            dynamicContent.innerHTML = `<h2>Acesso Restrito</h2><p>Sem permissões configuradas.</p>`;
         }
     } catch (error) {
-        console.error("Erro ao carregar perfil:", error);
+        console.error("Erro:", error);
     }
 }
 
-// Ação do Botão de Login / Logout
+// Login
 loginBtn.addEventListener('click', () => {
     if (auth.currentUser) {
         auth.signOut();
     } else {
-        const email = prompt("Digite seu e-mail:");
-        const password = prompt("Digite sua senha:");
-        
+        const email = prompt("E-mail:");
+        const password = prompt("Senha:");
         if(email && password) {
-            signInWithEmailAndPassword(auth, email, password)
-                .catch(error => {
-                    alert("Erro ao logar: " + error.message);
-                });
+            signInWithEmailAndPassword(auth, email, password).catch(e => alert("Erro: " + e.message));
         }
+    }
+});
+
+// ==========================================
+// FUNÇÕES DO PAINEL DE CONTROLE (GRAVAÇÃO)
+// ==========================================
+
+// Criar Comunidade
+document.getElementById('form-comunidade').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const nome = document.getElementById('comunidade-nome').value;
+    const desc = document.getElementById('comunidade-desc').value;
+    const btn = e.target.querySelector('button');
+
+    try {
+        btn.textContent = 'Salvando...';
+        btn.disabled = true;
+        
+        const docRef = await addDoc(collection(db, "comunidades"), {
+            nome: nome,
+            descricao: desc,
+            id_produtor: auth.currentUser.uid // Vincula o criador como dono
+        });
+        
+        alert(`Comunidade criada com sucesso!\nCopie e guarde este ID: ${docRef.id}`);
+        e.target.reset();
+    } catch (error) {
+        alert("Erro ao criar comunidade: " + error.message);
+    } finally {
+        btn.textContent = 'Salvar Comunidade';
+        btn.disabled = false;
+    }
+});
+
+// Criar Projeto
+document.getElementById('form-projeto').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const titulo = document.getElementById('projeto-titulo').value;
+    const idComunidade = document.getElementById('projeto-id-comunidade').value;
+    const url = document.getElementById('projeto-url').value;
+    const btn = e.target.querySelector('button');
+
+    try {
+        btn.textContent = 'Salvando...';
+        btn.disabled = true;
+        
+        await addDoc(collection(db, "projetos"), {
+            titulo: titulo,
+            id_comunidade: idComunidade,
+            conteudo_url: url
+        });
+        
+        alert("Projeto salvo com sucesso!");
+        e.target.reset();
+    } catch (error) {
+        alert("Erro ao salvar projeto: " + error.message);
+    } finally {
+        btn.textContent = 'Salvar Projeto';
+        btn.disabled = false;
     }
 });
