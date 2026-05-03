@@ -23,44 +23,44 @@ const db = getFirestore(app);
 let currentUserRole = 'usuario';
 let currentUserData = null; 
 let currentProjetoId = null;
-let currentTargetPostId = null; // Guarda ID para focar o post
+let currentTargetPostId = null;
 let allUsersData = []; 
 let globalFeedPosts = []; 
 let feedPageSize = 10;
 let feedCurrentIndex = 0;
 
-// Sidebar Toggle
-const sidebar = document.getElementById('sidebar');
-const sidebarToggle = document.getElementById('sidebar-toggle');
-if(sidebarToggle && sidebar) {
-    sidebarToggle.addEventListener('click', () => {
-        sidebar.classList.toggle('expanded');
-        sidebar.classList.toggle('collapsed');
-    });
-}
-
-// UI Globais
+// Elementos UI Globais
 const userNameSpan = document.getElementById('user-name');
 const userBadgesDiv = document.getElementById('user-badges');
 const authContainer = document.getElementById('auth-container');
 const loginBox = document.getElementById('login-box');
 const registerBox = document.getElementById('register-box');
 
-// Telas
 const globalFeedView = document.getElementById('global-feed-view');
 const dynamicContent = document.getElementById('dynamic-content'); 
 const myProjectsView = document.getElementById('my-projects-view');
 const projectView = document.getElementById('project-view');
 const adminPanel = document.getElementById('admin-panel');
-
-// Containers
 const globalPostsContainer = document.getElementById('global-posts-container');
 const communitiesContainer = document.getElementById('communities-container');
 const myProjectsContainer = document.getElementById('my-projects-container');
-const requestsList = document.getElementById('requests-list');
 
+// Lógica Sidebar
+const sidebar = document.getElementById('sidebar');
+const sidebarToggle = document.getElementById('sidebar-toggle');
+if(sidebarToggle && sidebar) {
+    sidebarToggle.addEventListener('click', () => { sidebar.classList.toggle('expanded'); sidebar.classList.toggle('collapsed'); });
+}
+
+// Navegação e "Active" State
 document.getElementById('link-show-register').addEventListener('click', (e) => { e.preventDefault(); loginBox.classList.add('hidden'); registerBox.classList.remove('hidden'); });
 document.getElementById('link-show-login').addEventListener('click', (e) => { e.preventDefault(); registerBox.classList.add('hidden'); loginBox.classList.remove('hidden'); });
+
+function updateActiveNav(idDesktop, idMobile) {
+    document.querySelectorAll('#sidebar nav a, #mobile-bottom-nav a').forEach(el => el.classList.remove('active'));
+    if(idDesktop && document.getElementById(idDesktop)) document.getElementById(idDesktop).classList.add('active');
+    if(idMobile && document.getElementById(idMobile)) document.getElementById(idMobile).classList.add('active');
+}
 
 function esconderTelas() {
     globalFeedView.classList.add('hidden');
@@ -71,10 +71,10 @@ function esconderTelas() {
 }
 
 const navSetup = [
-    { id: 'nav-feed', mobId: 'mob-nav-feed', action: () => { esconderTelas(); globalFeedView.classList.remove('hidden'); carregarFeedGlobal(); } },
-    { id: 'nav-comunidades', mobId: 'mob-nav-comunidades', action: () => { esconderTelas(); dynamicContent.classList.remove('hidden'); carregarVitrineComunidades(); } },
-    { id: 'nav-projetos', mobId: 'mob-nav-projetos', action: () => { esconderTelas(); myProjectsView.classList.remove('hidden'); carregarMeusProjetos(); } },
-    { id: 'nav-admin', action: () => { esconderTelas(); adminPanel.classList.remove('hidden'); carregarListaGerenciamento(); carregarSolicitacoes(); } }
+    { id: 'nav-feed', mobId: 'mob-nav-feed', action: () => { esconderTelas(); globalFeedView.classList.remove('hidden'); updateActiveNav('nav-feed', 'mob-nav-feed'); carregarFeedGlobal(); } },
+    { id: 'nav-comunidades', mobId: 'mob-nav-comunidades', action: () => { esconderTelas(); dynamicContent.classList.remove('hidden'); updateActiveNav('nav-comunidades', 'mob-nav-comunidades'); carregarVitrineComunidades(); } },
+    { id: 'nav-projetos', mobId: 'mob-nav-projetos', action: () => { esconderTelas(); myProjectsView.classList.remove('hidden'); updateActiveNav('nav-projetos', 'mob-nav-projetos'); carregarMeusProjetos(); } },
+    { id: 'nav-admin', mobId: 'mob-nav-admin', action: () => { esconderTelas(); adminPanel.classList.remove('hidden'); updateActiveNav('nav-admin', 'mob-nav-admin'); carregarListaGerenciamento(); carregarSolicitacoes(); } }
 ];
 
 navSetup.forEach(nav => {
@@ -82,14 +82,11 @@ navSetup.forEach(nav => {
     if(nav.mobId && document.getElementById(nav.mobId)) document.getElementById(nav.mobId).addEventListener('click', (e) => { e.preventDefault(); nav.action(); });
 });
 
-// Ação de "HOME" nos Títulos Plataforma
-const btnHomeMobile = document.getElementById('logo-home-mobile');
-const btnHomeSidebar = document.getElementById('logo-home-sidebar');
-const goHome = () => { if(auth.currentUser) { esconderTelas(); globalFeedView.classList.remove('hidden'); carregarFeedGlobal(); } };
-if(btnHomeMobile) btnHomeMobile.addEventListener('click', goHome);
-if(btnHomeSidebar) btnHomeSidebar.addEventListener('click', goHome);
+const goHome = () => { if(auth.currentUser) { esconderTelas(); globalFeedView.classList.remove('hidden'); updateActiveNav('nav-feed', 'mob-nav-feed'); carregarFeedGlobal(); } };
+if(document.getElementById('logo-home-mobile')) document.getElementById('logo-home-mobile').addEventListener('click', goHome);
+if(document.getElementById('logo-home-sidebar')) document.getElementById('logo-home-sidebar').addEventListener('click', goHome);
 
-
+// Auth
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         document.getElementById('logout-btn').classList.remove('hidden');
@@ -98,18 +95,13 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('mobile-bottom-nav').classList.remove('hidden');
         
         await carregarPerfilUsuario(user.uid, user.email);
-        
-        esconderTelas();
-        globalFeedView.classList.remove('hidden');
-        carregarFeedGlobal();
+        goHome();
     } else {
-        userNameSpan.textContent = 'Não logado';
-        userBadgesDiv.innerHTML = '';
+        userNameSpan.textContent = 'Não logado'; userBadgesDiv.innerHTML = '';
         document.getElementById('logout-btn').classList.add('hidden');
         document.getElementById('sidebar').classList.add('hidden');
         document.getElementById('mobile-bottom-nav').classList.add('hidden');
-        esconderTelas();
-        authContainer.classList.remove('hidden');
+        esconderTelas(); authContainer.classList.remove('hidden');
     }
 });
 
@@ -128,7 +120,7 @@ async function carregarPerfilUsuario(uid, email) {
                 await updateDoc(userDocRef, { nome: nomeDisplay });
                 currentUserData.nome = nomeDisplay;
             }
-            userNameSpan.textContent = `Olá, ${nomeDisplay}`;
+            userNameSpan.textContent = nomeDisplay;
 
             if (currentUserRole !== 'usuario') {
                 document.getElementById('admin-panel-link').classList.remove('hidden');
@@ -142,15 +134,11 @@ async function carregarPerfilUsuario(uid, email) {
                 document.getElementById('tools-produtor').classList.add('hidden');
                 document.getElementById('join-requests-container').classList.add('hidden');
             }
-            if (currentUserRole === 'programador') {
-                document.getElementById('master-admin-tools').classList.remove('hidden');
-                carregarListaDeUsuarios(); 
-            }
+            if (currentUserRole === 'programador') { document.getElementById('master-admin-tools').classList.remove('hidden'); carregarListaDeUsuarios(); }
             
-            resolverBadgesUsuario();
-            atualizarSidebarComunidades();
+            resolverBadgesUsuario(); atualizarSidebarComunidades();
         }
-    } catch (error) { console.error(error); }
+    } catch (error) {}
 }
 
 async function atualizarSidebarComunidades() {
@@ -164,9 +152,8 @@ async function atualizarSidebarComunidades() {
             let isCriador = data.id_criador === auth.currentUser?.uid;
             let isAdmin = data.admins_emails && data.admins_emails.includes(auth.currentUser?.email);
             let isMembro = currentUserData?.acesso_comunidades?.includes(doc.id);
-            
             if (isCriador || isAdmin || isMembro || currentUserRole === 'programador') {
-                html += `<li><a href="#" onclick="event.preventDefault(); listarProjetosDaComunidade('${doc.id}', '${data.nome}')" title="${data.nome}"><span class="icon">💬</span> <span class="text">${data.nome}</span></a></li>`;
+                html += `<li><a href="#" onclick="event.preventDefault(); updateActiveNav(null, null); listarProjetosDaComunidade('${doc.id}', '${data.nome}')"><span class="icon">💬</span> <span class="text">${data.nome}</span></a></li>`;
             }
         });
         if(html === '') document.getElementById('sidebar-dynamic-section').classList.add('hidden');
@@ -177,7 +164,7 @@ async function atualizarSidebarComunidades() {
 async function resolverBadgesUsuario() {
     let bHTML = '';
     if(currentUserRole === 'programador') {
-        bHTML += '<div class="badge-role">👨‍💻 Programador</div>';
+        bHTML = '<div class="badge-role">👨‍💻 Programador</div>';
     } else {
         let isProdutor = false; let isAdmin = false; let isAluno = false;
         const snap = await getDocs(collection(db, "comunidades"));
@@ -190,45 +177,42 @@ async function resolverBadgesUsuario() {
 
         if(isProdutor || currentUserRole === 'produtor') bHTML += '<div class="badge-role">🎬 Produtor</div>';
         if(isAdmin) bHTML += '<div class="badge-role">🛡️ Administrador</div>';
-        if(isAluno || currentUserRole === 'usuario') bHTML += '<div class="badge-role">👤 Membro</div>';
+        if(isAluno && currentUserRole === 'usuario') bHTML += '<div class="badge-role">👤 Membro</div>';
+
+        // Lógica de Visitante
+        if(!isProdutor && !isAdmin && !isAluno && currentUserRole === 'usuario') {
+            bHTML = '<div class="badge-role">👀 Visitante</div>';
+        }
     }
     userBadgesDiv.innerHTML = bHTML;
 }
 
 document.getElementById('form-login').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const btn = e.target.querySelector('button'); btn.textContent = 'Aguarde...';
+    e.preventDefault(); const btn = e.target.querySelector('button'); btn.textContent = 'Aguarde...';
     signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-pass').value)
         .catch(error => alert("Erro: " + error.message)).finally(() => btn.textContent = 'Entrar');
 });
 
 document.getElementById('form-register').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = e.target.querySelector('button'); btn.textContent = 'Aguarde...';
+    e.preventDefault(); const btn = e.target.querySelector('button'); btn.textContent = 'Aguarde...';
     const emailStr = document.getElementById('reg-email').value;
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, emailStr, document.getElementById('reg-pass').value);
         let cargoInicial = 'usuario';
-        
         const q = query(collection(db, "comunidades"), where("admins_emails", "array-contains", emailStr));
         if (!(await getDocs(q)).empty) cargoInicial = 'admin'; 
-
         const nomePadrao = emailStr.split('@')[0];
-
-        await setDoc(doc(db, "users", userCredential.user.uid), {
-            nome: nomePadrao, email: emailStr, role: cargoInicial, acesso_comunidades: [], acesso_projetos: []
-        });
-        alert("Conta criada com sucesso!");
-    } catch (error) { alert("Erro: " + error.message); } 
-    finally { btn.textContent = 'Cadastrar'; }
+        await setDoc(doc(db, "users", userCredential.user.uid), { nome: nomePadrao, email: emailStr, role: cargoInicial, acesso_comunidades: [], acesso_projetos: [] });
+        alert("Conta criada!");
+    } catch (error) { alert("Erro: " + error.message); } finally { btn.textContent = 'Cadastrar'; }
 });
 document.getElementById('logout-btn').addEventListener('click', () => { signOut(auth); });
 
 // -----------------------------------------
-// 1. MEU FEED (GLOBAL)
+// 1. MEU FEED GLOBAL
 // -----------------------------------------
 async function carregarFeedGlobal() {
-    globalPostsContainer.innerHTML = '<p class="loading-text">Mapeando suas postagens...</p>';
+    globalPostsContainer.innerHTML = '<p class="loading-text">Buscando postagens...</p>';
     document.getElementById('btn-load-more').classList.add('hidden');
     feedCurrentIndex = 0;
     
@@ -248,14 +232,10 @@ async function carregarFeedGlobal() {
 
         const projSnapshot = await getDocs(collection(db, "projetos"));
         projSnapshot.forEach(doc => {
-            if(comunidadesPermitidas.includes(doc.data().id_comunidade)) {
-                meusProjetosIds.push(doc.id); nomesProjetos[doc.id] = doc.data().titulo;
-            }
+            if(comunidadesPermitidas.includes(doc.data().id_comunidade)) { meusProjetosIds.push(doc.id); nomesProjetos[doc.id] = doc.data().titulo; }
         });
 
-        if(meusProjetosIds.length === 0) {
-            globalPostsContainer.innerHTML = '<p class="loading-text">Você ainda não participa de nenhuma comunidade ativa. Vá em Explorar!</p>'; return;
-        }
+        if(meusProjetosIds.length === 0) { globalPostsContainer.innerHTML = '<p class="loading-text">Você ainda não participa de projetos ativos. Vá em Explorar!</p>'; return; }
 
         const qPosts = query(collection(db, "postagens"), orderBy("data_hora", "desc"), limit(100));
         const snapPosts = await getDocs(qPosts);
@@ -266,11 +246,9 @@ async function carregarFeedGlobal() {
             if(meusProjetosIds.includes(p.id_projeto)) globalFeedPosts.push({id: doc.id, nome_projeto: nomesProjetos[p.id_projeto], ...p});
         });
 
-        if(globalFeedPosts.length === 0) { globalPostsContainer.innerHTML = '<p class="loading-text">Nenhuma postagem recente nos seus módulos.</p>'; return; }
-
-        globalPostsContainer.innerHTML = '';
-        renderizarLoteFeed();
-    } catch(error) { globalPostsContainer.innerHTML = '<p>Erro ao carregar o feed.</p>'; }
+        if(globalFeedPosts.length === 0) { globalPostsContainer.innerHTML = '<p class="loading-text">Nenhuma postagem recente.</p>'; return; }
+        globalPostsContainer.innerHTML = ''; renderizarLoteFeed();
+    } catch(error) { globalPostsContainer.innerHTML = '<p>Erro ao carregar feed.</p>'; }
 }
 
 function renderizarLoteFeed() {
@@ -284,7 +262,7 @@ function renderizarLoteFeed() {
         card.innerHTML = `
             <div class="post-header">
                 <div class="post-meta"><b>${post.autor_email.split('@')[0]}</b> <span class="projeto-tag">${post.nome_projeto}</span><br>${dataFormatada}</div>
-                <div class="post-actions"><button class="btn-sm btn-primary" onclick="abrirFeedProjeto('${post.id_projeto}', '${post.id}')"><span>💬</span> Acessar Post</button></div>
+                <div class="post-actions"><button class="btn-sm btn-primary" onclick="abrirFeedProjeto('${post.id_projeto}', '${post.id}')"><span>💬</span> Ver Feed</button></div>
             </div>
             <div class="post-content">${textoFormatado}</div>
             ${imgHtml}
@@ -323,11 +301,7 @@ async function carregarVitrineComunidades() {
                     ? `<button onclick="ingressarComunidade('${id}')">Ingressar Agora</button>`
                     : `<button class="btn-secondary" onclick="solicitarAcesso('${id}', '${data.nome}', '${data.id_criador}')">Solicitar Acesso</button>`;
 
-                communitiesContainer.innerHTML += `
-                    <div class="community-card">
-                        <div><h3>${data.nome} ${badge}</h3><p>${data.descricao}</p></div>
-                        ${btnAction}
-                    </div>`;
+                communitiesContainer.innerHTML += `<div class="community-card"><div><h3>${data.nome} ${badge}</h3><p>${data.descricao}</p></div>${btnAction}</div>`;
             }
         });
         if(communitiesContainer.innerHTML === '') communitiesContainer.innerHTML = '<p class="loading-text">Você já participa de todas as comunidades disponíveis!</p>';
@@ -340,19 +314,15 @@ window.ingressarComunidade = async (comId) => {
         alert("Sucesso! Você agora é membro desta comunidade.");
         currentUserData.acesso_comunidades.push(comId);
         carregarVitrineComunidades(); resolverBadgesUsuario(); atualizarSidebarComunidades();
-    } catch (error) { alert("Erro ao ingressar."); }
+    } catch (error) {}
 };
 
 window.solicitarAcesso = async (comId, comNome, idCriador) => {
     try {
         const q = query(collection(db, "solicitacoes"), where("uid_usuario", "==", auth.currentUser.uid), where("id_comunidade", "==", comId));
-        if(!(await getDocs(q)).empty) { alert("Você já enviou uma solicitação para esta comunidade. Aguarde a aprovação."); return; }
-        await addDoc(collection(db, "solicitacoes"), {
-            id_comunidade: comId, nome_comunidade: comNome, id_criador: idCriador,
-            uid_usuario: auth.currentUser.uid, email_usuario: auth.currentUser.email,
-            nome_usuario: currentUserData.nome, status: 'pendente', data_hora: new Date().toISOString()
-        });
-        alert("Solicitação enviada aos administradores!"); carregarVitrineComunidades(); 
+        if(!(await getDocs(q)).empty) { alert("Você já enviou uma solicitação para esta comunidade."); return; }
+        await addDoc(collection(db, "solicitacoes"), { id_comunidade: comId, nome_comunidade: comNome, id_criador: idCriador, uid_usuario: auth.currentUser.uid, email_usuario: auth.currentUser.email, nome_usuario: currentUserData.nome, status: 'pendente', data_hora: new Date().toISOString() });
+        alert("Solicitação enviada!"); carregarVitrineComunidades(); 
     } catch (error) {}
 };
 
@@ -393,12 +363,12 @@ async function carregarMeusProjetos() {
         };
 
         if (projetosProdutor.length === 0 && projetosAdmin.length === 0 && projetosMembro.length === 0) {
-            myProjectsContainer.innerHTML = '<p class="loading-text">Você ainda não possui acessos. Vá em Explorar!</p>'; return;
+            myProjectsContainer.innerHTML = '<p class="loading-text">Você ainda não possui acessos.</p>'; return;
         }
 
-        myProjectsContainer.innerHTML += renderGrid("Projetos como Produtor", projetosProdutor);
-        myProjectsContainer.innerHTML += renderGrid("Projetos como Administrador", projetosAdmin);
-        myProjectsContainer.innerHTML += renderGrid("Projetos como Membro", projetosMembro);
+        myProjectsContainer.innerHTML += renderGrid("Sou Produtor", projetosProdutor);
+        myProjectsContainer.innerHTML += renderGrid("Sou Administrador", projetosAdmin);
+        myProjectsContainer.innerHTML += renderGrid("Sou Membro", projetosMembro);
 
     } catch(error) {}
 }
@@ -420,13 +390,9 @@ window.listarProjetosDaComunidade = async (comId, comNome) => {
             const data = doc.data();
             const vis = data.visibilidade || 'publico';
             const badge = vis === 'privado' ? '<span class="badge-private">Privado</span>' : '<span class="badge-public">Público</span>';
-            grid.innerHTML += `
-                <div class="community-card">
-                    <div><h3>${data.titulo} ${badge}</h3><p>${data.descricao || ''}</p></div>
-                    <button onclick="abrirFeedProjeto('${doc.id}')">Acessar Feed</button>
-                </div>`;
+            grid.innerHTML += `<div class="community-card"><div><h3>${data.titulo} ${badge}</h3><p>${data.descricao || ''}</p></div><button onclick="abrirFeedProjeto('${doc.id}')">Acessar Feed</button></div>`;
         });
-    } catch (error) { console.error(error); }
+    } catch (error) {}
 };
 
 // -----------------------------------------
@@ -436,6 +402,7 @@ window.abrirFeedProjeto = async (projId, targetPostId = null) => {
     esconderTelas(); projectView.classList.remove('hidden'); 
     currentProjetoId = projId; currentTargetPostId = targetPostId;
     document.getElementById('posts-feed').innerHTML = '<p class="loading-text">Carregando postagens...</p>';
+    updateActiveNav(null, null); // Remove foco do menu
 
     try {
         const projDoc = await getDoc(doc(db, "projetos", projId));
@@ -454,10 +421,9 @@ window.abrirFeedProjeto = async (projId, targetPostId = null) => {
 };
 
 document.getElementById('btn-edit-photo').addEventListener('click', async () => {
-    const url = prompt("Cole o link (URL) da nova imagem circular:");
+    const url = prompt("URL da nova foto:");
     if (url && currentProjetoId) {
-        try { await updateDoc(doc(db, "projetos", currentProjetoId), { foto_url: url }); document.getElementById('feed-photo').src = url; } 
-        catch (error) {}
+        try { await updateDoc(doc(db, "projetos", currentProjetoId), { foto_url: url }); document.getElementById('feed-photo').src = url; } catch (error) {}
     }
 });
 
@@ -507,18 +473,13 @@ async function carregarPostagensProjeto() {
             carregarComentarios(post.id);
         });
 
-        // Foca visualmente no Post se veio de um "Deep Link" do Feed
         if(currentTargetPostId) {
             setTimeout(() => {
                 const targetEl = document.getElementById(`post-${currentTargetPostId}`);
-                if(targetEl) {
-                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    targetEl.classList.add('highlight-focus');
-                }
-                currentTargetPostId = null; // reseta
+                if(targetEl) { targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); targetEl.classList.add('highlight-focus'); }
+                currentTargetPostId = null;
             }, 300);
         }
-
     } catch (error) {}
 }
 
@@ -544,11 +505,7 @@ async function carregarComentarios(postId) {
         coments.forEach(c => {
             const podeExcluir = (currentUserRole !== 'usuario' || c.autor_email === auth.currentUser.email);
             const btnX = podeExcluir ? `<button onclick="excluirDocumento('comentarios', '${c.id}', '${postId}')" style="background:none; border:none; color:var(--danger-color); cursor:pointer;">✖</button>` : '';
-            list.innerHTML += `
-                <div class="comment-item">
-                    <div><span class="comment-author">${c.autor_email.split('@')[0]}</span> ${c.texto}</div>
-                    ${btnX}
-                </div>`;
+            list.innerHTML += `<div class="comment-item"><div><span class="comment-author">${c.autor_email.split('@')[0]}</span> ${c.texto}</div>${btnX}</div>`;
         });
     } catch (error) {}
 }
@@ -563,7 +520,7 @@ function processarTextoLinks(texto) {
 }
 
 // -----------------------------------------
-// PAINEL DE CONTROLE E GESTÃO
+// PAINEL DE CONTROLE (NOVA EDIÇÃO COMPLETA)
 // -----------------------------------------
 async function carregarComunidadesSelects(userEmail, role) {
     const selects = [document.getElementById('projeto-id-comunidade-select'), document.getElementById('add-admin-select'), document.getElementById('edit-com-select')];
@@ -602,7 +559,7 @@ document.getElementById('edit-com-select').addEventListener('change', async (e) 
 
 document.getElementById('form-edit-comunidade').addEventListener('submit', async (e) => {
     e.preventDefault(); const comId = document.getElementById('edit-com-select').value;
-    if(!comId) return alert("Selecione uma comunidade para editar.");
+    if(!comId) return alert("Selecione.");
     const btn = e.target.querySelector('button'); btn.textContent = 'Salvando...'; btn.disabled = true;
 
     try {
@@ -616,8 +573,8 @@ document.getElementById('form-edit-comunidade').addEventListener('submit', async
         if(newOwnerEmail) {
             const qUser = query(collection(db, "users"), where("email", "==", newOwnerEmail));
             const userSnap = await getDocs(qUser);
-            if(userSnap.empty) alert("O e-mail digitado para novo Dono não existe. As demais alterações foram salvas.");
-            else { updateData.id_criador = userSnap.docs[0].id; alert("Propriedade transferida com sucesso!"); }
+            if(userSnap.empty) alert("O e-mail digitado para novo Dono não existe.");
+            else { updateData.id_criador = userSnap.docs[0].id; alert("Propriedade transferida!"); }
         }
 
         await updateDoc(doc(db, "comunidades", comId), updateData);
@@ -665,16 +622,12 @@ async function carregarListaGerenciamento() {
         let html = '<h4 style="margin-top:20px; margin-bottom: 10px; color: var(--text-color);">Seus Projetos</h4>';
         const snapProj = await getDocs(collection(db, "projetos"));
         snapProj.forEach(doc => {
-            html += `<div class="user-card">
-                        <div class="user-info"><span class="user-email">${doc.data().titulo}</span></div>
-                        <div class="user-actions">
-                            <button class="btn-sm btn-edit" onclick="editarDocumentoTextual('projetos', '${doc.id}', 'titulo')">Editar Título</button>
-                            <button class="btn-sm btn-delete" onclick="excluirDocumento('projetos', '${doc.id}')">Excluir</button>
-                        </div>
-                     </div>`;
+            html += `<div class="user-card"><div class="user-info"><span class="user-email">${doc.data().titulo}</span></div>
+                     <div class="user-actions"><button class="btn-sm btn-edit" onclick="editarDocumentoTextual('projetos', '${doc.id}', 'titulo')">Editar Título</button>
+                     <button class="btn-sm btn-delete" onclick="excluirDocumento('projetos', '${doc.id}')">Excluir</button></div></div>`;
         });
         mList.innerHTML = html;
-    } catch (error) { mList.innerHTML = '<p>Erro ao carregar dados.</p>'; }
+    } catch (error) {}
 }
 
 async function carregarSolicitacoes() {
@@ -693,17 +646,9 @@ async function carregarSolicitacoes() {
         snapSol.forEach(doc => {
             const req = doc.data();
             if(myComIds.includes(req.id_comunidade)) {
-                html += `
-                <div class="user-card" id="req-${doc.id}">
-                    <div class="user-info">
-                        <span class="user-email">${req.nome_usuario} deseja entrar em:</span>
-                        <span class="projeto-tag" style="margin-left:0;">${req.nome_comunidade}</span>
-                    </div>
-                    <div class="user-actions">
-                        <button class="btn-sm btn-success" onclick="aprovarSolicitacao('${doc.id}', '${req.uid_usuario}', '${req.id_comunidade}')">Aprovar</button>
-                        <button class="btn-sm btn-delete" onclick="excluirDocumento('solicitacoes', '${doc.id}')">Rejeitar</button>
-                    </div>
-                </div>`;
+                html += `<div class="user-card" id="req-${doc.id}"><div class="user-info"><span class="user-email">${req.nome_usuario} deseja entrar em:</span><span class="projeto-tag" style="margin-left:0;">${req.nome_comunidade}</span></div>
+                         <div class="user-actions"><button class="btn-sm btn-success" onclick="aprovarSolicitacao('${doc.id}', '${req.uid_usuario}', '${req.id_comunidade}')">Aprovar</button>
+                         <button class="btn-sm btn-delete" onclick="excluirDocumento('solicitacoes', '${doc.id}')">Rejeitar</button></div></div>`;
             }
         });
         list.innerHTML = html || '<p>Nenhuma solicitação pendente.</p>';
@@ -715,7 +660,7 @@ window.aprovarSolicitacao = async (reqId, uidUsuario, comId) => {
         await updateDoc(doc(db, "users", uidUsuario), { acesso_comunidades: arrayUnion(comId) });
         await deleteDoc(doc(db, "solicitacoes", reqId));
         alert("Usuário aprovado!"); carregarSolicitacoes();
-    } catch(e) { alert("Erro ao aprovar."); }
+    } catch(e) {}
 }
 
 async function carregarListaDeUsuarios() {
@@ -730,19 +675,13 @@ function renderizarUsuarios(users) {
     const container = document.getElementById('users-list-container'); container.innerHTML = '';
     users.forEach(user => {
         const roleStr = user.role || 'usuario';
-        container.innerHTML += `
-            <div class="user-card">
-                <div class="user-info"><span class="user-email">${user.nome || user.email}</span><span class="tag tag-${roleStr}">${roleStr.toUpperCase()}</span></div>
-                <div class="user-actions">
-                    <select class="role-select-inline" id="select-${user.id}">
-                        <option value="usuario" ${roleStr === 'usuario' ? 'selected' : ''}>Usuário</option>
-                        <option value="admin" ${roleStr === 'admin' ? 'selected' : ''}>Admin</option>
-                        <option value="produtor" ${roleStr === 'produtor' ? 'selected' : ''}>Produtor</option>
-                        <option value="programador" ${roleStr === 'programador' ? 'selected' : ''}>Programador</option>
-                    </select>
-                    <button class="btn-update-role btn-sm" style="background-color: var(--primary-color);" onclick="atualizarNivel('${user.id}')">Salvar</button>
-                </div>
-            </div>`;
+        container.innerHTML += `<div class="user-card"><div class="user-info"><span class="user-email">${user.nome || user.email}</span><span class="tag tag-${roleStr}">${roleStr.toUpperCase()}</span></div>
+                                <div class="user-actions"><select class="role-select-inline" id="select-${user.id}">
+                                <option value="usuario" ${roleStr === 'usuario' ? 'selected' : ''}>Usuário</option>
+                                <option value="admin" ${roleStr === 'admin' ? 'selected' : ''}>Admin</option>
+                                <option value="produtor" ${roleStr === 'produtor' ? 'selected' : ''}>Produtor</option>
+                                <option value="programador" ${roleStr === 'programador' ? 'selected' : ''}>Programador</option>
+                                </select><button class="btn-update-role btn-sm" style="background-color: var(--primary-color);" onclick="atualizarNivel('${user.id}')">Salvar</button></div></div>`;
     });
 }
 document.getElementById('search-user').addEventListener('input', (e) => {
@@ -751,5 +690,5 @@ document.getElementById('search-user').addEventListener('input', (e) => {
 window.atualizarNivel = async (uid) => {
     const selectEl = document.getElementById(`select-${uid}`); const btn = selectEl.nextElementSibling;
     try { btn.textContent = '...'; btn.disabled = true; await updateDoc(doc(db, "users", uid), { role: selectEl.value }); alert("Acesso atualizado!"); carregarListaDeUsuarios(); } 
-    catch (error) { alert("Erro."); } finally { btn.textContent = 'Salvar'; btn.disabled = false; }
+    catch (error) {} finally { btn.textContent = 'Salvar'; btn.disabled = false; }
 };
