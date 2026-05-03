@@ -7,14 +7,16 @@
     
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
-    <meta name="theme-color" content="#0056b3">
+    <meta name="theme-color" content="#4f46e5">
 </head>
 <body>
     <header class="navbar">
-        <h1>Plataforma</h1>
-        <div id="user-info">
-            <span id="user-email">Não logado</span>
-            <button id="logout-btn" class="hidden">Sair</button>
+        <div class="navbar-content">
+            <h1>Plataforma</h1>
+            <div id="user-info">
+                <span id="user-email">Não logado</span>
+                <button id="logout-btn" class="hidden">Sair</button>
+            </div>
         </div>
     </header>
 
@@ -34,7 +36,7 @@
             
             <div id="auth-container">
                 <div id="login-box" class="auth-box">
-                    <h2>Login</h2>
+                    <h2>Bem-vindo de volta</h2>
                     <form id="form-login">
                         <input type="email" id="login-email" placeholder="E-mail" required>
                         <input type="password" id="login-pass" placeholder="Senha" required>
@@ -56,8 +58,8 @@
 
             <!-- Vitrine -->
             <div id="dynamic-content" class="hidden">
-                <h2 id="dynamic-title">Comunidades</h2>
-                <p id="dynamic-subtitle">Acesse ou explore novas comunidades na plataforma.</p>
+                <h2 id="dynamic-title" class="page-title">Comunidades</h2>
+                <p id="dynamic-subtitle" class="page-subtitle">Acesse ou explore novas comunidades na plataforma.</p>
                 <div id="communities-container"></div>
             </div>
 
@@ -72,7 +74,7 @@
                         <h2 id="feed-title">Carregando...</h2>
                         <p id="feed-desc">...</p>
                         <div class="feed-stats">
-                            <span id="feed-followers">0</span> Seguidores | 
+                            <span id="feed-followers">0</span> Seguidores &nbsp;&bull;&nbsp; 
                             <span id="feed-members">0</span> Membros
                         </div>
                     </div>
@@ -87,14 +89,14 @@
                 </div>
 
                 <div id="posts-feed" class="posts-feed">
-                    <p>Carregando postagens...</p>
+                    <p class="loading-text">Carregando postagens...</p>
                 </div>
             </div>
             
             <!-- Painel de Controle -->
             <div id="admin-panel" class="hidden">
-                <h2>Painel de Controle</h2>
-                <p>Gerenciamento de conteúdo.</p>
+                <h2 class="page-title">Painel de Controle</h2>
+                <p class="page-subtitle">Gerenciamento inteligente de conteúdo.</p>
                 
                 <div id="tools-produtor" class="hidden">
                     <div class="admin-form-container">
@@ -113,7 +115,7 @@
                                 <option value="">Selecione a Comunidade...</option>
                             </select>
                             <input type="email" id="add-admin-email" placeholder="E-mail do Administrador" required>
-                            <button type="submit">Nomear Administrador</button>
+                            <button type="submit" class="btn-secondary">Nomear Administrador</button>
                         </form>
                     </div>
                 </div>
@@ -132,9 +134,9 @@
 
                 <div class="admin-form-container">
                     <h3>Gerenciar Conteúdos Existentes</h3>
-                    <p style="font-size: 0.85rem; color: #555; margin-bottom: 10px;">Edite ou exclua suas Comunidades e Projetos.</p>
+                    <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 15px;">Edite ou exclua suas Comunidades e Projetos.</p>
                     <div id="management-list" class="users-list">
-                        <p>Carregando seus conteúdos...</p>
+                        <p class="loading-text">Carregando seus conteúdos...</p>
                     </div>
                 </div>
 
