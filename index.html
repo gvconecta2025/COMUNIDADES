@@ -23,7 +23,7 @@
         <aside id="sidebar" class="desktop-only hidden">
             <nav>
                 <ul>
-                    <li><a href="#comunidades" id="nav-comunidades">Minhas Comunidades</a></li>
+                    <li><a href="#comunidades" id="nav-comunidades">Comunidades</a></li>
                     <li><a href="#projetos" id="nav-projetos">Projetos Avulsos</a></li>
                     <li id="admin-panel-link" class="hidden"><a href="#admin" id="nav-admin">Painel de Controle</a></li>
                 </ul>
@@ -54,24 +54,43 @@
                 </div>
             </div>
 
+            <!-- Vitrine de Comunidades (Visível para todos os logados) -->
             <div id="dynamic-content" class="hidden">
-                <h2>Bem-vindo à plataforma</h2>
-                <p>Carregando seus módulos...</p>
+                <h2>Explorar Comunidades</h2>
+                <p>Confira as comunidades disponíveis na plataforma.</p>
+                <div id="community-grid" class="community-grid">
+                    <!-- Comunidades serão injetadas aqui pelo JS -->
+                </div>
             </div>
             
+            <!-- Painel de Controle -->
             <div id="admin-panel" class="hidden">
                 <h2>Painel de Controle</h2>
-                <p>Gerenciamento da plataforma.</p>
+                <p>Gerenciamento de conteúdo.</p>
                 
-                <div class="admin-form-container">
-                    <h3>Criar Nova Comunidade</h3>
-                    <form id="form-comunidade">
-                        <input type="text" id="comunidade-nome" placeholder="Nome da Comunidade (ex: Turma 2026)" required>
-                        <textarea id="comunidade-desc" placeholder="Descrição da comunidade" required></textarea>
-                        <button type="submit">Salvar Comunidade</button>
-                    </form>
+                <!-- Exclusivo para Programador e Produtor -->
+                <div id="tools-produtor" class="hidden">
+                    <div class="admin-form-container">
+                        <h3>Criar Nova Comunidade</h3>
+                        <form id="form-comunidade">
+                            <input type="text" id="comunidade-nome" placeholder="Nome da Comunidade" required>
+                            <textarea id="comunidade-desc" placeholder="Descrição da comunidade" required></textarea>
+                            <button type="submit">Salvar Comunidade</button>
+                        </form>
+                    </div>
+
+                    <div class="admin-form-container">
+                        <h3>Adicionar Administrador à Comunidade</h3>
+                        <p style="font-size: 0.85rem; color: #555;">Informe o ID da sua comunidade e o e-mail de quem irá administrá-la.</p>
+                        <form id="form-add-admin">
+                            <input type="text" id="add-admin-id" placeholder="ID da Comunidade" required>
+                            <input type="email" id="add-admin-email" placeholder="E-mail do Administrador" required>
+                            <button type="submit">Nomear Administrador</button>
+                        </form>
+                    </div>
                 </div>
 
+                <!-- Visível para Programador, Produtor e Admin -->
                 <div class="admin-form-container">
                     <h3>Criar Novo Projeto (Módulo)</h3>
                     <form id="form-projeto">
@@ -86,9 +105,7 @@
                 <div id="master-admin-tools" class="admin-form-container hidden">
                     <h3>Gestão de Usuários e Acessos</h3>
                     <input type="text" id="search-user" class="search-input" placeholder="Pesquisar usuário por e-mail...">
-                    <div id="users-list-container" class="users-list">
-                        <!-- Lista injetada pelo JS -->
-                    </div>
+                    <div id="users-list-container" class="users-list"></div>
                 </div>
             </div>
 
