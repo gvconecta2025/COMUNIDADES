@@ -13,6 +13,7 @@
 
     <div id="crm-layout">
         
+        <!-- BARRA LATERAL -->
         <aside id="sidebar" class="desktop-only expanded">
             <div class="sidebar-header">
                 <h2 class="sidebar-logo" id="logo-home-sidebar" style="cursor: pointer;"><span class="icon">🚀</span><span class="text">Plataforma</span></h2>
@@ -39,13 +40,14 @@
 
         <div id="main-wrapper">
             
+            <!-- CABEÇALHO -->
             <header class="navbar">
                 <div class="navbar-content">
                     <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
                         <button id="mobile-menu-toggle" class="mobile-only btn-hamburger">☰</button>
                         <h1 id="logo-home-mobile" class="mobile-only" style="color: var(--primary-color); font-size: 1.25rem; cursor: pointer; margin-right: 15px;">Plataforma</h1>
                         
-                        <!-- BARRA DE PESQUISA GLOBAL -->
+                        <!-- PESQUISA GLOBAL -->
                         <div class="search-bar-wrapper hidden" id="global-search-wrapper">
                             <span class="search-icon">🔍</span>
                             <input type="text" id="global-search-input" placeholder="Pesquisar comunidades, projetos ou contas...">
@@ -85,15 +87,15 @@
                         </div>
                     </div>
 
-                    <!-- TELA DE RESULTADOS DA PESQUISA -->
+                    <!-- RESULTADOS DA PESQUISA -->
                     <div id="search-results-view" class="hidden app-view">
+                        <button onclick="goHome()" class="btn-secondary" style="margin-bottom: 15px; padding: 5px 15px; font-size: 0.85rem;">⬅ Voltar para o Feed</button>
                         <h2 class="page-title">Resultados da Pesquisa</h2>
                         <div class="tabs-container">
                             <button class="tab-btn active" data-target="search-tab-comunidades">Comunidades</button>
                             <button class="tab-btn" data-target="search-tab-projetos">Projetos</button>
                             <button class="tab-btn" data-target="search-tab-contas">Contas</button>
                         </div>
-                        
                         <div id="search-tab-comunidades" class="tab-content active">
                             <div id="search-comunidades-grid" class="community-grid"><p class="loading-text">Digite algo para pesquisar...</p></div>
                         </div>
@@ -107,6 +109,7 @@
 
                     <div id="programmer-intel-panel" class="hidden admin-form-container" style="background:#e0e7ff; border-color:#818cf8; margin-bottom: 20px; padding: 15px;"></div>
 
+                    <!-- MEU FEED (HOME) -->
                     <div id="global-feed-view" class="hidden app-view">
                         <h2 class="page-title">Meu Feed</h2>
                         <p class="page-subtitle">Atualizações dos seus projetos.</p>
@@ -114,37 +117,40 @@
                         <button id="btn-load-more-global" class="btn-secondary hidden" style="width: 100%; margin-top: 20px;">Carregar mais postagens</button>
                     </div>
 
-                    <!-- NOVO: FEED DA COMUNIDADE (Comunidade + Projetos pequenos + Feed Cronológico) -->
+                    <!-- FEED DA COMUNIDADE -->
                     <div id="community-view" class="hidden app-view">
+                        <button onclick="goHome()" class="btn-secondary" style="margin-bottom: 15px; padding: 5px 15px; font-size: 0.85rem;">⬅ Voltar para Início</button>
                         <div class="feed-header" style="flex-direction: column; align-items: flex-start; gap: 10px; padding: 1.5rem;">
                             <div>
                                 <h2 id="com-view-title" style="font-size: 1.6rem; font-weight: 800; color: var(--primary-color);">Carregando...</h2>
                                 <p id="com-view-desc" style="color: var(--text-light); font-size: 0.95rem; margin-top: 5px;">...</p>
                             </div>
-                            
                             <h4 style="font-size: 0.85rem; text-transform: uppercase; color: var(--text-light); margin-top: 15px; letter-spacing: 0.5px;">Projetos desta Comunidade</h4>
                             <div id="com-view-projects-mini" class="mini-projects-wrapper">
                                 <p class="loading-text">Carregando projetos...</p>
                             </div>
                         </div>
-
                         <div id="community-posts-container" class="posts-feed"><p class="loading-text">Carregando linha do tempo...</p></div>
                         <button id="btn-load-more-community" class="btn-secondary hidden" style="width: 100%; margin-top: 20px;">Carregar mais postagens</button>
                     </div>
 
+                    <!-- EXPLORAR -->
                     <div id="dynamic-content" class="hidden app-view">
                         <h2 id="dynamic-title" class="page-title">Explorar</h2>
                         <p id="dynamic-subtitle" class="page-subtitle">Encontre novas comunidades.</p>
                         <div id="communities-container"></div>
                     </div>
 
+                    <!-- MEUS PROJETOS -->
                     <div id="my-projects-view" class="hidden app-view">
                         <h2 class="page-title">Meus Projetos</h2>
                         <p class="page-subtitle">Sua biblioteca de conteúdos ativos.</p>
                         <div id="my-projects-container"></div>
                     </div>
 
+                    <!-- FEED DO PROJETO ESPECÍFICO -->
                     <div id="project-view" class="hidden app-view">
+                        <button onclick="voltarParaComunidade()" class="btn-secondary" style="margin-bottom: 15px; padding: 5px 15px; font-size: 0.85rem;">⬅ Voltar para a Comunidade</button>
                         <div class="feed-header">
                             <div class="feed-photo-container">
                                 <img src="https://via.placeholder.com/150" id="feed-photo" class="circular-photo" alt="Foto">
@@ -173,6 +179,7 @@
                         <button id="btn-load-more-project" class="btn-secondary hidden" style="width: 100%; margin-top: 20px;">Carregar mais postagens</button>
                     </div>
                     
+                    <!-- PAINEL DE CONTROLE -->
                     <div id="admin-panel" class="hidden app-view">
                         <h2 class="page-title">Painel de Controle</h2>
                         <p class="page-subtitle">Gestão de conteúdo.</p>
@@ -236,7 +243,7 @@
                                 <select id="projeto-id-comunidade-select" required><option value="">Selecione...</option></select>
                                 <select id="projeto-visibilidade" required>
                                     <option value="publico">Projeto Público</option>
-                                    <option value="privado">Projeto Privado</option>
+                                    <option value="privado">Projeto Privado (Requer Aprovação)</option>
                                 </select>
                                 <button type="submit">Salvar Projeto</button>
                             </form>
@@ -259,6 +266,7 @@
         </div>
     </div>
 
+    <!-- MENU INFERIOR MOBILE -->
     <nav id="mobile-bottom-nav" class="mobile-only hidden">
         <ul>
             <li><a href="#feed" id="mob-nav-feed" class="active"><span class="icon">📰</span><span class="text">Feed</span></a></li>
