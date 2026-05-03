@@ -55,7 +55,7 @@ body {
     overflow-y: auto;
 }
 
-/* --- ESTRUTURA DESKTOP (Computador) --- */
+/* --- ESTRUTURA DESKTOP --- */
 @media (min-width: 769px) {
     .mobile-only {
         display: none;
@@ -83,7 +83,7 @@ body {
     }
 }
 
-/* --- ESTRUTURA MOBILE (Celular) --- */
+/* --- ESTRUTURA MOBILE --- */
 @media (max-width: 768px) {
     .desktop-only {
         display: none;
@@ -91,7 +91,7 @@ body {
 
     #content-area {
         padding: 1rem;
-        padding-bottom: 70px; /* Espaço para o menu inferior não cobrir o texto */
+        padding-bottom: 70px;
     }
 
     #mobile-bottom-nav {
@@ -119,10 +119,49 @@ body {
         color: var(--primary-color);
         font-weight: bold;
     }
+}
 
-    /* Ajuste do PDF para celular */
-    #pdf-viewer-container {
-        display: flex;
-        flex-direction: column;
-    }
+/* --- PAINEL DE CONTROLE --- */
+.admin-form-container {
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-top: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid #ddd;
+}
+
+.admin-form-container form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.admin-form-container input, 
+.admin-form-container textarea {
+    padding: 0.8rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.admin-form-container textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.admin-form-container button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.admin-form-container button:hover {
+    background-color: #218838;
 }
