@@ -22,6 +22,7 @@ const db = getFirestore(app);
 
 // Referências Globais
 let currentUserRole = 'usuario';
+let currentUserData = null; // Armazena o perfil completo
 let currentProjetoId = null;
 let allUsersData = []; 
 
@@ -34,7 +35,7 @@ const registerBox = document.getElementById('register-box');
 const dynamicContent = document.getElementById('dynamic-content');
 const projectView = document.getElementById('project-view');
 const adminPanel = document.getElementById('admin-panel');
-const communityGrid = document.getElementById('community-grid');
+const communitiesContainer = document.getElementById('communities-container');
 const dynamicTitle = document.getElementById('dynamic-title');
 const dynamicSubtitle = document.getElementById('dynamic-subtitle');
 
@@ -100,14 +101,17 @@ async function carregarPerfilUsuario(uid) {
         const userDoc = await getDoc(userDocRef);
 
         if (userDoc.exists()) {
-            currentUserRole = userDoc.data().role;
+            currentUserData = userDoc.data();
+            currentUserRole = currentUserData.role;
 
             if (currentUserRole !== 'usuario') {
                 document.getElementById('admin-panel-link').classList.remove('hidden');
-                carregarComunidadesSelects(userDoc.data().email, currentUserRole);
+                carregarComunidadesSelects(currentUserData.email, currentUserRole);
             }
             if (currentUserRole === 'programador' || currentUserRole === 'produtor') {
                 document.getElementById('tools-produtor').classList.remove('hidden');
+            } else {
+                document.getElementById('tools-produtor').classList.add('hidden');
             }
             if (currentUserRole === 'programador') {
                 document.getElementById('master-admin-tools').classList.remove('hidden');
@@ -148,7 +152,7 @@ document.getElementById('form-register').addEventListener('submit', async (e) =>
         if (!(await getDocs(q)).empty) cargoInicial = 'admin'; 
 
         await setDoc(doc(db, "users", userCredential.user.uid), {
-            email: userCredential.user.email, role: cargoInicial, acesso_comunidades: [], acesso_projetos: []
+            email: userCredential.user.email, role: cargoInicial, acesso_comunidades: [], seguindo_comunidades: [], acesso_projetos: []
         });
         alert("Conta criada!");
     } catch (error) { alert("Erro: " + error.message); } 
@@ -157,47 +161,90 @@ document.getElementById('form-register').addEventListener('submit', async (e) =>
 logoutBtn.addEventListener('click', () => { signOut(auth); });
 
 // -----------------------------------------
-// NAVEGAÇÃO: COMUNIDADES -> PROJETOS -> FEED
+// VITRINE CATEGORIZADA DE COMUNIDADES
 // -----------------------------------------
 async function carregarVitrineComunidades() {
-    dynamicTitle.textContent = "Explorar Comunidades";
-    dynamicSubtitle.textContent = "Confira as comunidades disponíveis.";
-    communityGrid.innerHTML = '<p>Buscando...</p>';
+    dynamicTitle.textContent = "Comunidades";
+    dynamicSubtitle.textContent = "Acesse ou explore novas comunidades.";
+    communitiesContainer.innerHTML = '<p>Buscando...</p>';
+    
     try {
         const querySnapshot = await getDocs(collection(db, "comunidades"));
-        communityGrid.innerHTML = '';
-        if (querySnapshot.empty) { communityGrid.innerHTML = '<p>Nenhuma comunidade encontrada.</p>'; return; }
+        communitiesContainer.innerHTML = '';
+        
+        if (querySnapshot.empty) { 
+            communitiesContainer.innerHTML = '<p>Nenhuma comunidade encontrada.</p>'; 
+            return; 
+        }
+
+        const arraysUsuario = {
+            acesso: currentUserData?.acesso_comunidades || [],
+            seguindo: currentUserData?.seguindo_comunidades || []
+        };
+
+        const categorias = {
+            criadas: [], administradas: [], membro: [], seguindo: [], explorar: []
+        };
+
         querySnapshot.forEach((doc) => {
             const data = doc.data();
-            communityGrid.innerHTML += `
-                <div class="community-card">
-                    <div><h3>${data.nome}</h3><p>${data.descricao}</p></div>
-                    <button onclick="listarProjetosDaComunidade('${doc.id}', '${data.nome}')">Ver Projetos</button>
-                </div>`;
+            const id = doc.id;
+            
+            let isCriador = data.id_criador === auth.currentUser.uid;
+            let isAdmin = data.admins_emails && data.admins_emails.includes(auth.currentUser.email) && !isCriador;
+            let isMembro = arraysUsuario.acesso.includes(id);
+            let isSeguidor = arraysUsuario.seguindo.includes(id);
+
+            if (isCriador) categorias.criadas.push({id, data});
+            else if (isAdmin) categorias.administradas.push({id, data});
+            else if (isMembro) categorias.membro.push({id, data});
+            else if (isSeguidor) categorias.seguindo.push({id, data});
+            else categorias.explorar.push({id, data});
         });
+
+        // Função auxiliar para renderizar cada seção
+        const renderizarSessao = (titulo, lista) => {
+            if (lista.length === 0) return '';
+            let html = `<div class="category-section"><h3 class="category-title">${titulo}</h3><div class="community-grid">`;
+            lista.forEach(item => {
+                html += `
+                    <div class="community-card">
+                        <div><h3>${item.data.nome}</h3><p>${item.data.descricao}</p></div>
+                        <button onclick="listarProjetosDaComunidade('${item.id}', '${item.data.nome}')">Acessar</button>
+                    </div>`;
+            });
+            html += `</div></div>`;
+            return html;
+        };
+
+        communitiesContainer.innerHTML += renderizarSessao("Criadas por mim (Produtor)", categorias.criadas);
+        communitiesContainer.innerHTML += renderizarSessao("Administrando", categorias.administradas);
+        communitiesContainer.innerHTML += renderizarSessao("Membro (Acesso Total)", categorias.membro);
+        communitiesContainer.innerHTML += renderizarSessao("Seguindo", categorias.seguindo);
+        communitiesContainer.innerHTML += renderizarSessao("Explorar", categorias.explorar);
+
     } catch (error) { console.error(error); }
 }
 
 window.listarProjetosDaComunidade = async (comId, comNome) => {
-    // NOTA: Aqui entraria a checagem de permissão/compra do usuário.
-    // Como solicitado, liberamos a visualização por enquanto para focar na estrutura do Feed.
     dynamicTitle.textContent = "Projetos em: " + comNome;
     dynamicSubtitle.textContent = "Selecione o feed que deseja acessar.";
-    communityGrid.innerHTML = '<p>Buscando projetos...</p>';
+    communitiesContainer.innerHTML = '<p>Buscando projetos...</p>';
     
     try {
         const q = query(collection(db, "projetos"), where("id_comunidade", "==", comId));
         const querySnapshot = await getDocs(q);
-        communityGrid.innerHTML = '';
+        communitiesContainer.innerHTML = '<div class="community-grid" id="projetos-grid"></div>';
+        const grid = document.getElementById('projetos-grid');
         
         if (querySnapshot.empty) {
-            communityGrid.innerHTML = '<p>Esta comunidade ainda não possui projetos.</p>';
+            grid.innerHTML = '<p>Esta comunidade ainda não possui projetos.</p>';
             return;
         }
 
         querySnapshot.forEach((doc) => {
             const data = doc.data();
-            communityGrid.innerHTML += `
+            grid.innerHTML += `
                 <div class="community-card">
                     <div>
                         <h3>${data.titulo}</h3>
@@ -259,27 +306,21 @@ document.getElementById('form-post').addEventListener('submit', async (e) => {
 
     try {
         await addDoc(collection(db, "postagens"), {
-            id_projeto: currentProjetoId,
-            autor_email: auth.currentUser.email,
-            texto: texto,
-            data_hora: new Date().toISOString()
+            id_projeto: currentProjetoId, autor_email: auth.currentUser.email, texto: texto, data_hora: new Date().toISOString()
         });
-        e.target.reset();
-        carregarPostagens();
+        e.target.reset(); carregarPostagens();
     } catch (error) { alert("Erro ao postar: " + error.message); } 
     finally { btn.textContent = 'Publicar'; btn.disabled = false; }
 });
 
 async function carregarPostagens() {
     try {
-        // Ordenação exige criação de Índice no Firebase se houver muitos acessos. 
-        // Para simplificar no modo teste, pegamos todos e ordenamos no JS.
         const q = query(collection(db, "postagens"), where("id_projeto", "==", currentProjetoId));
         const snapshot = await getDocs(q);
         
         let posts = [];
         snapshot.forEach(doc => posts.push(doc.data()));
-        posts.sort((a, b) => new Date(b.data_hora) - new Date(a.data_hora)); // Mais recentes primeiro
+        posts.sort((a, b) => new Date(b.data_hora) - new Date(a.data_hora)); 
 
         postsFeed.innerHTML = '';
         if(posts.length === 0) {
@@ -299,27 +340,18 @@ async function carregarPostagens() {
     } catch (error) { console.error("Erro ao carregar posts:", error); }
 }
 
-// MOTOR DE FORMATAÇÃO DE LINKS
 function processarTextoLinks(texto) {
-    // Protege contra HTML malicioso
     let seguro = texto.replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const urlRegex = /(https?:\/\/[^\s]+)/g;
-
     return seguro.replace(urlRegex, (url) => {
         const urlLower = url.toLowerCase();
-        
-        // Verifica se é imagem
         if (urlLower.match(/\.(jpeg|jpg|gif|png|webp|bmp)(?:\?.*)?$/)) {
             return `<img src="${url}" class="post-media" alt="Imagem postada">`;
         }
-        
-        // Verifica se é YouTube
         const ytMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
         if (ytMatch && ytMatch[1]) {
             return `<iframe class="post-media" src="https://www.youtube.com/embed/${ytMatch[1]}" frameborder="0" allowfullscreen></iframe>`;
         }
-        
-        // Se não for mídia, cria o Botão
         return `<br><a href="${url}" target="_blank" class="btn-link">Acessar Link Externo</a><br>`;
     });
 }
