@@ -7,12 +7,13 @@
     
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
-    <meta name="theme-color" content="#0f172a">
+    <meta name="theme-color" content="#ffffff">
 </head>
 <body>
 
     <div id="crm-layout">
         
+        <!-- BARRA LATERAL (PC) -->
         <aside id="sidebar" class="desktop-only hidden expanded">
             <div class="sidebar-header">
                 <h2 class="sidebar-logo" id="logo-home-sidebar" style="cursor: pointer;"><span class="icon">🚀</span><span class="text">Plataforma</span></h2>
@@ -20,26 +21,25 @@
             </div>
             <nav>
                 <ul>
-                    <li><a href="#feed" id="nav-feed" title="Meu Feed"><span class="icon">📰</span> <span class="text">Meu Feed</span></a></li>
+                    <li><a href="#feed" id="nav-feed" title="Meu Feed" class="active"><span class="icon">📰</span> <span class="text">Meu Feed</span></a></li>
                     <li><a href="#comunidades" id="nav-comunidades" title="Explorar"><span class="icon">🌍</span> <span class="text">Explorar</span></a></li>
                     <li><a href="#projetos" id="nav-projetos" title="Meus Projetos"><span class="icon">📂</span> <span class="text">Meus Projetos</span></a></li>
                     <li id="admin-panel-link" class="hidden"><a href="#admin" id="nav-admin" title="Painel de Controle"><span class="icon">⚙️</span> <span class="text">Painel</span></a></li>
                 </ul>
-                <ul id="sidebar-dynamic-section">
+                <ul id="sidebar-dynamic-section" class="hidden">
                     <li class="sidebar-divider"></li>
                     <li class="sidebar-title"><span class="text">MINHAS COMUNIDADES</span></li>
-                    <div id="sidebar-communities-list">
-                        <!-- Injetado pelo JS -->
-                    </div>
+                    <div id="sidebar-communities-list"></div>
                 </ul>
             </nav>
         </aside>
 
         <div id="main-wrapper">
             
+            <!-- HEADER FIXO (MOBILE E PC) -->
             <header class="navbar">
                 <div class="navbar-content">
-                    <h1 id="logo-home-mobile" class="mobile-only" style="color: var(--primary-color); font-size: 1.2rem; cursor: pointer;">Plataforma</h1>
+                    <h1 id="logo-home-mobile" class="mobile-only" style="color: var(--primary-color); font-size: 1.25rem; cursor: pointer;">Plataforma</h1>
                     <div class="desktop-only"></div>
                     <div id="user-info">
                         <div class="user-details">
@@ -54,9 +54,10 @@
             <section id="content-area">
                 <div class="content-50">
                     
+                    <!-- AUTH -->
                     <div id="auth-container">
                         <div id="login-box" class="auth-box">
-                            <h2>Bem-vindo de volta</h2>
+                            <h2>Bem-vindo</h2>
                             <form id="form-login">
                                 <input type="email" id="login-email" placeholder="E-mail" required>
                                 <input type="password" id="login-pass" placeholder="Senha" required>
@@ -76,31 +77,35 @@
                         </div>
                     </div>
 
-                    <div id="global-feed-view" class="hidden">
+                    <!-- MEU FEED -->
+                    <div id="global-feed-view" class="hidden app-view">
                         <h2 class="page-title">Meu Feed</h2>
-                        <p class="page-subtitle">Últimas atualizações dos seus projetos.</p>
+                        <p class="page-subtitle">Atualizações dos seus projetos.</p>
                         <div id="global-posts-container" class="posts-feed">
-                            <p class="loading-text">Carregando seu feed...</p>
+                            <p class="loading-text">Carregando feed...</p>
                         </div>
-                        <button id="btn-load-more" class="btn-secondary hidden" style="width: 100%; margin-top: 20px;">Carregar mais 10 postagens</button>
+                        <button id="btn-load-more" class="btn-secondary hidden" style="width: 100%; margin-top: 20px;">Carregar mais postagens</button>
                     </div>
 
-                    <div id="dynamic-content" class="hidden">
-                        <h2 id="dynamic-title" class="page-title">Explorar Comunidades</h2>
-                        <p id="dynamic-subtitle" class="page-subtitle">Encontre novas comunidades para participar.</p>
+                    <!-- EXPLORAR -->
+                    <div id="dynamic-content" class="hidden app-view">
+                        <h2 id="dynamic-title" class="page-title">Explorar</h2>
+                        <p id="dynamic-subtitle" class="page-subtitle">Encontre novas comunidades.</p>
                         <div id="communities-container"></div>
                     </div>
 
-                    <div id="my-projects-view" class="hidden">
+                    <!-- MEUS PROJETOS -->
+                    <div id="my-projects-view" class="hidden app-view">
                         <h2 class="page-title">Meus Projetos</h2>
-                        <p class="page-subtitle">Módulos organizados pela sua função na plataforma.</p>
+                        <p class="page-subtitle">Sua biblioteca de conteúdos ativos.</p>
                         <div id="my-projects-container"></div>
                     </div>
 
-                    <div id="project-view" class="hidden">
+                    <!-- FEED DO PROJETO -->
+                    <div id="project-view" class="hidden app-view">
                         <div class="feed-header">
                             <div class="feed-photo-container">
-                                <img src="https://via.placeholder.com/150" id="feed-photo" class="circular-photo" alt="Foto do Projeto">
+                                <img src="https://via.placeholder.com/150" id="feed-photo" class="circular-photo" alt="Foto">
                                 <button id="btn-edit-photo" class="btn-round hidden">✏️</button>
                             </div>
                             <div class="feed-info">
@@ -115,8 +120,8 @@
 
                         <div id="post-creator" class="admin-form-container hidden">
                             <form id="form-post">
-                                <textarea id="post-text" placeholder="Compartilhe algo na comunidade..." required></textarea>
-                                <input type="url" id="post-image-url" placeholder="URL de uma imagem (opcional)" class="file-input">
+                                <textarea id="post-text" placeholder="Compartilhe algo... (Youtube ou Links)" required></textarea>
+                                <input type="url" id="post-image-url" placeholder="URL da imagem (opcional)" class="file-input">
                                 <button type="submit">Publicar</button>
                             </form>
                         </div>
@@ -126,16 +131,17 @@
                         </div>
                     </div>
                     
-                    <div id="admin-panel" class="hidden">
+                    <!-- PAINEL -->
+                    <div id="admin-panel" class="hidden app-view">
                         <h2 class="page-title">Painel de Controle</h2>
-                        <p class="page-subtitle">Gerenciamento inteligente de conteúdo.</p>
+                        <p class="page-subtitle">Gestão de conteúdo.</p>
                         
                         <div id="tools-produtor" class="hidden">
                             <div class="admin-form-container">
                                 <h3>Criar Nova Comunidade</h3>
                                 <form id="form-comunidade">
                                     <input type="text" id="comunidade-nome" placeholder="Nome da Comunidade" required>
-                                    <textarea id="comunidade-desc" placeholder="Descrição da comunidade" required></textarea>
+                                    <textarea id="comunidade-desc" placeholder="Descrição" required></textarea>
                                     <select id="comunidade-visibilidade" required>
                                         <option value="publico">Pública (Entrada Imediata)</option>
                                         <option value="privado">Privada (Requer Aprovação)</option>
@@ -146,24 +152,18 @@
 
                             <div class="admin-form-container" style="border: 2px solid var(--primary-color);">
                                 <h3 style="color: var(--primary-color);">Editar Comunidade Existente</h3>
-                                <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 10px;">Ajuste dados, gerencie múltiplos admins ou transfira a propriedade da comunidade.</p>
                                 <form id="form-edit-comunidade">
-                                    <select id="edit-com-select" required>
-                                        <option value="">Selecione uma comunidade para editar...</option>
-                                    </select>
+                                    <select id="edit-com-select" required><option value="">Selecione...</option></select>
                                     <input type="text" id="edit-com-nome" placeholder="Nome" required>
                                     <textarea id="edit-com-desc" placeholder="Descrição" required></textarea>
                                     <select id="edit-com-visibilidade" required>
                                         <option value="publico">Pública</option>
                                         <option value="privado">Privada</option>
                                     </select>
-                                    
-                                    <label style="font-size:0.85rem; color:var(--text-color); font-weight:bold; margin-bottom:-10px;">E-mails dos Administradores (separados por vírgula)</label>
-                                    <textarea id="edit-com-admins" placeholder="admin1@email.com, admin2@email.com" required style="min-height: 60px;"></textarea>
-                                    
-                                    <label style="font-size:0.85rem; color:var(--text-color); font-weight:bold; margin-bottom:-10px; margin-top:5px;">Transferir Propriedade (Opcional)</label>
-                                    <input type="email" id="edit-com-owner" placeholder="E-mail do novo Dono (deixe vazio para não alterar)">
-
+                                    <label style="font-size:0.85rem; font-weight:bold;">Admins (vírgula):</label>
+                                    <textarea id="edit-com-admins" placeholder="admin1@email.com, admin2..." required></textarea>
+                                    <label style="font-size:0.85rem; font-weight:bold;">Transferir Propriedade:</label>
+                                    <input type="email" id="edit-com-owner" placeholder="Novo Dono (Opcional)">
                                     <button type="submit" class="btn-warning">Salvar Alterações</button>
                                 </form>
                             </div>
@@ -171,22 +171,18 @@
 
                         <div id="join-requests-container" class="admin-form-container">
                             <h3>Solicitações de Entrada</h3>
-                            <div id="requests-list" class="users-list">
-                                <p class="loading-text">Verificando solicitações...</p>
-                            </div>
+                            <div id="requests-list" class="users-list"><p class="loading-text">Verificando...</p></div>
                         </div>
 
                         <div class="admin-form-container">
                             <h3>Criar Novo Projeto (Feed)</h3>
                             <form id="form-projeto">
                                 <input type="text" id="projeto-titulo" placeholder="Nome do Projeto" required>
-                                <textarea id="projeto-desc" placeholder="Descrição do projeto" required></textarea>
-                                <select id="projeto-id-comunidade-select" required>
-                                    <option value="">Selecione a Comunidade...</option>
-                                </select>
+                                <textarea id="projeto-desc" placeholder="Descrição" required></textarea>
+                                <select id="projeto-id-comunidade-select" required><option value="">Selecione...</option></select>
                                 <select id="projeto-visibilidade" required>
                                     <option value="publico">Projeto Público</option>
-                                    <option value="privado">Projeto Privado (Requer Aprovação)</option>
+                                    <option value="privado">Projeto Privado</option>
                                 </select>
                                 <button type="submit">Salvar Projeto</button>
                             </form>
@@ -194,9 +190,7 @@
 
                         <div class="admin-form-container">
                             <h3>Gerenciar Projetos</h3>
-                            <div id="management-list" class="users-list">
-                                <p class="loading-text">Carregando seus conteúdos...</p>
-                            </div>
+                            <div id="management-list" class="users-list"><p class="loading-text">Carregando...</p></div>
                         </div>
 
                         <div id="master-admin-tools" class="admin-form-container hidden">
@@ -211,12 +205,13 @@
         </div>
     </div>
 
+    <!-- NAVEGAÇÃO APP MOBILE -->
     <nav id="mobile-bottom-nav" class="mobile-only hidden">
         <ul>
-            <li><a href="#feed" id="mob-nav-feed">Feed</a></li>
-            <li><a href="#comunidades" id="mob-nav-comunidades">Explorar</a></li>
-            <li><a href="#projetos" id="mob-nav-projetos">Projetos</a></li>
-            <li id="mobile-admin-panel-link" class="hidden"><a href="#admin">Painel</a></li>
+            <li><a href="#feed" id="mob-nav-feed" class="active"><span class="icon">📰</span><span class="text">Feed</span></a></li>
+            <li><a href="#comunidades" id="mob-nav-comunidades"><span class="icon">🌍</span><span class="text">Explorar</span></a></li>
+            <li><a href="#projetos" id="mob-nav-projetos"><span class="icon">📂</span><span class="text">Projetos</span></a></li>
+            <li id="mobile-admin-panel-link" class="hidden"><a href="#admin" id="mob-nav-admin"><span class="icon">⚙️</span><span class="text">Painel</span></a></li>
         </ul>
     </nav>
 
