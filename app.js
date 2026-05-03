@@ -19,6 +19,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// Referências Globais
 let currentUserRole = 'usuario';
 let currentUserData = null; 
 let currentProjetoId = null;
@@ -138,15 +139,43 @@ async function carregarPerfilUsuario(uid, email) {
                 document.getElementById('master-admin-tools').classList.remove('hidden');
                 carregarListaDeUsuarios(); 
             }
+            
+            resolverBadgesUsuario();
+            atualizarSidebarComunidades();
         }
     } catch (error) { console.error(error); }
 }
 
-// Resolve visualmente as Badges do Usuário com base no banco e interações
+async function atualizarSidebarComunidades() {
+    const list = document.getElementById('sidebar-communities-list');
+    if(!list) return;
+    list.innerHTML = '';
+    
+    try {
+        const snap = await getDocs(collection(db, "comunidades"));
+        let html = '';
+        snap.forEach(doc => {
+            const data = doc.data();
+            let isCriador = data.id_criador === auth.currentUser?.uid;
+            let isAdmin = data.admins_emails && data.admins_emails.includes(auth.currentUser?.email);
+            let isMembro = currentUserData?.acesso_comunidades?.includes(doc.id);
+            
+            if (isCriador || isAdmin || isMembro || currentUserRole === 'programador') {
+                html += `<li><a href="#" onclick="event.preventDefault(); listarProjetosDaComunidade('${doc.id}', '${data.nome}')" title="${data.nome}"><span class="icon">💬</span> <span class="text">${data.nome}</span></a></li>`;
+            }
+        });
+        if(html === '') document.getElementById('sidebar-dynamic-section').classList.add('hidden');
+        else {
+            document.getElementById('sidebar-dynamic-section').classList.remove('hidden');
+            list.innerHTML = html;
+        }
+    } catch(e) {}
+}
+
 async function resolverBadgesUsuario() {
     let bHTML = '';
     if(currentUserRole === 'programador') {
-        bHTML += '<div class="badge-role">👨‍💻 Programador Master</div>';
+        bHTML += '<div class="badge-role">👨‍💻 Programador</div>';
     } else {
         let isProdutor = false; let isAdmin = false; let isAluno = false;
         const snap = await getDocs(collection(db, "comunidades"));
@@ -159,7 +188,7 @@ async function resolverBadgesUsuario() {
 
         if(isProdutor || currentUserRole === 'produtor') bHTML += '<div class="badge-role">🎬 Produtor</div>';
         if(isAdmin) bHTML += '<div class="badge-role">🛡️ Administrador</div>';
-        if(isAluno || currentUserRole === 'usuario') bHTML += '<div class="badge-role">👤 Aluno / Membro</div>';
+        if(isAluno || currentUserRole === 'usuario') bHTML += '<div class="badge-role">👤 Membro</div>';
     }
     userBadgesDiv.innerHTML = bHTML;
 }
@@ -203,11 +232,7 @@ async function carregarFeedGlobal() {
     feedCurrentIndex = 0;
     
     try {
-        resolverBadgesUsuario(); // Aproveita pra resolver os crachás do usuário
-        
-        let meusProjetosIds = [];
-        let nomesProjetos = {}; 
-
+        let meusProjetosIds = []; let nomesProjetos = {}; 
         const arraysUsuario = { acesso: currentUserData?.acesso_comunidades || [] };
         
         const comSnapshot = await getDocs(collection(db, "comunidades"));
@@ -225,14 +250,12 @@ async function carregarFeedGlobal() {
         const projSnapshot = await getDocs(collection(db, "projetos"));
         projSnapshot.forEach(doc => {
             if(comunidadesPermitidas.includes(doc.data().id_comunidade)) {
-                meusProjetosIds.push(doc.id);
-                nomesProjetos[doc.id] = doc.data().titulo;
+                meusProjetosIds.push(doc.id); nomesProjetos[doc.id] = doc.data().titulo;
             }
         });
 
         if(meusProjetosIds.length === 0) {
-            globalPostsContainer.innerHTML = '<p class="loading-text">Você ainda não participa de nenhuma comunidade ativa. Vá em Explorar!</p>';
-            return;
+            globalPostsContainer.innerHTML = '<p class="loading-text">Você ainda não participa de nenhuma comunidade ativa. Vá em Explorar!</p>'; return;
         }
 
         const qPosts = query(collection(db, "postagens"), orderBy("data_hora", "desc"), limit(100));
@@ -241,19 +264,13 @@ async function carregarFeedGlobal() {
         globalFeedPosts = [];
         snapPosts.forEach(doc => {
             const p = doc.data();
-            if(meusProjetosIds.includes(p.id_projeto)) {
-                globalFeedPosts.push({id: doc.id, nome_projeto: nomesProjetos[p.id_projeto], ...p});
-            }
+            if(meusProjetosIds.includes(p.id_projeto)) globalFeedPosts.push({id: doc.id, nome_projeto: nomesProjetos[p.id_projeto], ...p});
         });
 
-        if(globalFeedPosts.length === 0) {
-            globalPostsContainer.innerHTML = '<p class="loading-text">Nenhuma postagem recente nos seus módulos.</p>';
-            return;
-        }
+        if(globalFeedPosts.length === 0) { globalPostsContainer.innerHTML = '<p class="loading-text">Nenhuma postagem recente nos seus módulos.</p>'; return; }
 
         globalPostsContainer.innerHTML = '';
         renderizarLoteFeed();
-
     } catch(error) { globalPostsContainer.innerHTML = '<p>Erro ao carregar o feed.</p>'; }
 }
 
@@ -302,7 +319,7 @@ async function carregarVitrineComunidades() {
 
             if (!isCriador && !isAdmin && !isMembro && currentUserRole !== 'programador') {
                 const visibilidade = data.visibilidade || 'publico'; 
-                const badge = visibilidade === 'privado' ? '<span class="badge-private">Privada</span>' : '';
+                const badge = visibilidade === 'privado' ? '<span class="badge-private">Privada</span>' : '<span class="badge-public">Pública</span>';
                 const btnAction = visibilidade === 'publico' 
                     ? `<button onclick="ingressarComunidade('${id}')">Ingressar Agora</button>`
                     : `<button class="btn-secondary" onclick="solicitarAcesso('${id}', '${data.nome}', '${data.id_criador}')">Solicitar Acesso</button>`;
@@ -323,7 +340,7 @@ window.ingressarComunidade = async (comId) => {
         await updateDoc(doc(db, "users", auth.currentUser.uid), { acesso_comunidades: arrayUnion(comId) });
         alert("Sucesso! Você agora é membro desta comunidade.");
         currentUserData.acesso_comunidades.push(comId);
-        carregarVitrineComunidades(); resolverBadgesUsuario();
+        carregarVitrineComunidades(); resolverBadgesUsuario(); atualizarSidebarComunidades();
     } catch (error) { alert("Erro ao ingressar."); }
 };
 
@@ -368,7 +385,11 @@ async function carregarMeusProjetos() {
         const renderGrid = (titulo, lista) => {
             if(lista.length === 0) return '';
             let html = `<div class="category-section"><h3 class="category-title">${titulo}</h3><div class="community-grid">`;
-            lista.forEach(p => { html += `<div class="community-card"><div><h3>${p.data.titulo}</h3><p>${p.data.descricao || ''}</p></div><button onclick="abrirFeedProjeto('${p.id}')">Acessar Feed</button></div>`; });
+            lista.forEach(p => { 
+                const vis = p.data.visibilidade || 'publico';
+                const badge = vis === 'privado' ? '<span class="badge-private">Privado</span>' : '<span class="badge-public">Público</span>';
+                html += `<div class="community-card"><div><h3>${p.data.titulo} ${badge}</h3><p>${p.data.descricao || ''}</p></div><button onclick="abrirFeedProjeto('${p.id}')">Acessar Feed</button></div>`; 
+            });
             html += `</div></div>`; return html;
         };
 
@@ -382,6 +403,32 @@ async function carregarMeusProjetos() {
 
     } catch(error) {}
 }
+
+window.listarProjetosDaComunidade = async (comId, comNome) => {
+    esconderTelas(); dynamicContent.classList.remove('hidden');
+    document.getElementById('dynamic-title').textContent = "Projetos em: " + comNome;
+    document.getElementById('dynamic-subtitle').textContent = "Selecione o feed que deseja acessar.";
+    communitiesContainer.innerHTML = '<p class="loading-text">Buscando projetos...</p>';
+    
+    try {
+        const q = query(collection(db, "projetos"), where("id_comunidade", "==", comId));
+        const querySnapshot = await getDocs(q);
+        communitiesContainer.innerHTML = '<div class="community-grid" id="projetos-grid"></div>';
+        const grid = document.getElementById('projetos-grid');
+        
+        if (querySnapshot.empty) { grid.innerHTML = '<p>Esta comunidade não possui projetos.</p>'; return; }
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const vis = data.visibilidade || 'publico';
+            const badge = vis === 'privado' ? '<span class="badge-private">Privado</span>' : '<span class="badge-public">Público</span>';
+            grid.innerHTML += `
+                <div class="community-card">
+                    <div><h3>${data.titulo} ${badge}</h3><p>${data.descricao || ''}</p></div>
+                    <button onclick="abrirFeedProjeto('${doc.id}')">Acessar Feed</button>
+                </div>`;
+        });
+    } catch (error) { console.error(error); }
+};
 
 // -----------------------------------------
 // 4. FEED DO PROJETO ESPECÍFICO
@@ -576,7 +623,7 @@ document.getElementById('form-projeto').addEventListener('submit', async (e) => 
     try {
         await addDoc(collection(db, "projetos"), {
             titulo: document.getElementById('projeto-titulo').value, descricao: document.getElementById('projeto-desc').value,
-            id_comunidade: document.getElementById('projeto-id-comunidade-select').value, 
+            id_comunidade: document.getElementById('projeto-id-comunidade-select').value, visibilidade: document.getElementById('projeto-visibilidade').value,
             seguidores: 0, membros: 0, foto_url: "https://via.placeholder.com/150"
         });
         alert("Projeto salvo!"); e.target.reset(); carregarListaGerenciamento();
@@ -596,7 +643,7 @@ window.excluirDocumento = async (colecao, idDoc, refReloadId = null) => {
 };
 
 window.editarDocumentoTextual = async (colecao, idDoc, campoAtualizar) => {
-    const novoValor = prompt("Digite o novo título:");
+    const novoValor = prompt("Digite o novo texto:");
     if(novoValor && novoValor.trim() !== "") {
         try { await updateDoc(doc(db, colecao, idDoc), { [campoAtualizar]: novoValor }); carregarListaGerenciamento(); } catch (error) {}
     }
