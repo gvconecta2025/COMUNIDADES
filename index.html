@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Plataforma de Projetos</title>
-    
-    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
     <meta name="theme-color" content="#ffffff">
 </head>
@@ -23,10 +21,10 @@
             </div>
             <nav>
                 <ul>
-                    <li><a href="#feed" id="nav-feed" onclick="window.abrirMeuFeed(event)" title="Meu Feed" class="active"><span class="icon">📰</span> <span class="text">Meu Feed</span></a></li>
-                    <li><a href="#comunidades" id="nav-comunidades" onclick="window.abrirExplorar(event)" title="Explorar"><span class="icon">🌍</span> <span class="text">Explorar</span></a></li>
-                    <li><a href="#projetos" id="nav-projetos" onclick="window.abrirMeusProjetos(event)" title="Meus Projetos"><span class="icon">📂</span> <span class="text">Meus Projetos</span></a></li>
-                    <li id="admin-panel-link" class="hidden"><a href="#admin" id="nav-admin" onclick="window.abrirPainel(event)" title="Painel de Controle"><span class="icon">⚙️</span> <span class="text">Painel de Controle</span></a></li>
+                    <li><a href="#feed" id="nav-feed" onclick="window.abrirMeuFeed(event)" class="active"><span class="icon">📰</span> <span class="text">Meu Feed</span></a></li>
+                    <li><a href="#comunidades" id="nav-comunidades" onclick="window.abrirExplorar(event)"><span class="icon">🌍</span> <span class="text">Explorar</span></a></li>
+                    <li><a href="#projetos" id="nav-projetos" onclick="window.abrirMeusProjetos(event)"><span class="icon">📂</span> <span class="text">Meus Projetos</span></a></li>
+                    <li id="admin-panel-link" class="hidden"><a href="#admin" id="nav-admin" onclick="window.abrirPainel(event)"><span class="icon">⚙️</span> <span class="text">Painel de Controle</span></a></li>
                 </ul>
                 <ul id="sidebar-dynamic-section" class="hidden">
                     <li class="sidebar-divider"></li>
@@ -65,29 +63,31 @@
             <section id="content-area">
                 <div class="content-50">
                     
+                    <!-- AUTH -->
                     <div id="auth-container">
-                        <div id="login-box" class="auth-box">
+                        <div class="auth-box" id="login-box">
                             <h2>Bem-vindo</h2>
                             <form id="form-login">
                                 <input type="email" id="login-email" placeholder="E-mail" required>
                                 <input type="password" id="login-pass" placeholder="Senha" required>
-                                <button type="submit">Entrar</button>
+                                <button type="submit" class="btn-primary">Entrar</button>
                             </form>
                             <p>Não tem conta? <a href="#" id="link-show-register">Cadastre-se aqui</a></p>
                         </div>
-                        <div id="register-box" class="auth-box hidden">
+                        <div class="auth-box hidden" id="register-box">
                             <h2>Criar Conta</h2>
                             <form id="form-register">
                                 <input type="email" id="reg-email" placeholder="E-mail" required>
                                 <input type="password" id="reg-pass" placeholder="Senha (Mín. 6 caracteres)" required>
-                                <button type="submit">Cadastrar</button>
+                                <button type="submit" class="btn-primary">Cadastrar</button>
                             </form>
                             <p>Já tem conta? <a href="#" id="link-show-login">Faça Login</a></p>
                         </div>
                     </div>
 
+                    <!-- BUSCA -->
                     <div id="search-results-view" class="hidden app-view">
-                        <button onclick="window.abrirMeuFeed(event)" class="btn-secondary" style="margin-bottom: 15px; padding: 5px 15px; font-size: 0.85rem;">⬅ Voltar</button>
+                        <button onclick="window.abrirMeuFeed(event)" class="btn-secondary" style="margin-bottom: 15px;">⬅ Voltar</button>
                         <h2 class="page-title">Resultados</h2>
                         <div class="tabs-container">
                             <button class="tab-btn active" data-target="search-tab-comunidades">Comunidades</button>
@@ -99,19 +99,20 @@
                         <div id="search-tab-contas" class="tab-content hidden"><div id="search-contas-list" class="users-list"></div></div>
                     </div>
 
-                    <div id="programmer-intel-panel" class="hidden admin-form-container" style="background:#e0e7ff; border-color:#818cf8; margin-bottom: 20px; padding: 15px;"></div>
+                    <div id="programmer-intel-panel" class="hidden admin-form-container" style="background:#e0e7ff; border-color:#818cf8; margin-bottom: 20px;"></div>
 
+                    <!-- MEU FEED -->
                     <div id="global-feed-view" class="hidden app-view">
                         <h2 class="page-title">Meu Feed</h2>
-                        <p class="page-subtitle">Novidades dos seus projetos.</p>
                         <div id="global-posts-container" class="posts-feed"></div>
                         <button id="btn-load-more-global" class="btn-secondary hidden" style="width: 100%; margin-top: 20px;">Carregar mais</button>
                     </div>
 
+                    <!-- COMUNIDADE -->
                     <div id="community-view" class="hidden app-view">
-                        <button onclick="window.abrirMeuFeed(event)" class="btn-secondary" style="margin-bottom: 15px; padding: 5px 15px; font-size: 0.85rem;">⬅ Voltar</button>
+                        <button onclick="window.abrirMeuFeed(event)" class="btn-secondary" style="margin-bottom: 15px;">⬅ Voltar</button>
                         <div class="feed-header">
-                            <h2 id="com-view-title" class="page-title">...</h2>
+                            <h2 id="com-view-title" class="page-title" style="color: var(--primary-color);">...</h2>
                             <p id="com-view-desc" class="page-subtitle">...</p>
                             <div id="com-view-projects-mini" class="mini-projects-wrapper"></div>
                         </div>
@@ -119,16 +120,19 @@
                         <button id="btn-load-more-community" class="btn-secondary hidden" style="width: 100%; margin-top: 20px;">Carregar mais</button>
                     </div>
 
+                    <!-- EXPLORAR -->
                     <div id="dynamic-content" class="hidden app-view">
                         <h2 class="page-title">Explorar</h2>
                         <div id="communities-container"></div>
                     </div>
 
+                    <!-- MEUS PROJETOS -->
                     <div id="my-projects-view" class="hidden app-view">
                         <h2 class="page-title">Meus Projetos</h2>
                         <div id="my-projects-container"></div>
                     </div>
 
+                    <!-- PROJETO ESPECÍFICO -->
                     <div id="project-view" class="hidden app-view">
                         <button onclick="window.voltarParaComunidade()" class="btn-secondary" style="margin-bottom: 15px;">⬅ Voltar</button>
                         <div class="feed-header">
@@ -139,114 +143,103 @@
                             <div class="feed-info">
                                 <span id="feed-parent-community" style="font-size: 0.7rem; font-weight: 700; color: var(--text-light);">COMUNIDADE</span>
                                 <h2 id="feed-title" class="page-title">...</h2>
-                                <p id="feed-desc">...</p>
-                                <div class="feed-stats">
-                                    <span id="feed-followers">0</span> Seguidores &bull; <span id="feed-members">0</span> Membros
-                                </div>
                             </div>
                         </div>
                         <div id="post-creator" class="admin-form-container hidden">
                             <form id="form-post">
                                 <textarea id="post-text" placeholder="Escreva algo..." required></textarea>
                                 <input type="url" id="post-image-url" placeholder="URL da imagem (opcional)">
-                                <button type="submit">Publicar</button>
+                                <button type="submit" class="btn-primary">Publicar</button>
                             </form>
                         </div>
                         <div id="posts-feed" class="posts-feed"></div>
-                        <button id="btn-load-more-project" class="btn-secondary hidden">Carregar mais</button>
+                        <button id="btn-load-more-project" class="btn-secondary hidden" style="width: 100%; margin-top: 20px;">Carregar mais</button>
                     </div>
                     
+                    <!-- PAINEL -->
                     <div id="admin-panel" class="hidden app-view">
                         <h2 class="page-title">Gerenciamento</h2>
-                        <p class="page-subtitle">Administre conteúdos e membros.</p>
-
                         <div class="tabs-container" style="margin-top: 10px;">
-                            <button class="tab-btn active" data-target="admin-tab-geral">Atividade</button>
-                            <button class="tab-btn" data-target="admin-tab-conteudo">Conteúdo</button>
+                            <button class="tab-btn active" data-target="admin-tab-conteudo">Conteúdo</button>
                             <button class="tab-btn" data-target="admin-tab-membros">Membros</button>
                             <button class="tab-btn hidden" id="master-tab-btn" data-target="admin-tab-master">Master</button>
                         </div>
 
-                        <div id="admin-tab-geral" class="tab-content active">
-                            <div id="join-requests-container" class="admin-form-container">
-                                <h3>Novas Solicitações de Entrada</h3>
-                                <div id="requests-list" class="users-list"><p class="loading-text">Nenhuma pendência.</p></div>
-                            </div>
-                        </div>
-
-                        <div id="admin-tab-conteudo" class="tab-content hidden">
-                            <div id="tools-produtor-conteudo" class="hidden">
+                        <div id="admin-tab-conteudo" class="tab-content active">
+                            <div id="tools-produtor" class="hidden">
                                 <div class="admin-form-container">
-                                    <h3>Criar Comunidade</h3>
+                                    <h3>Criação de Comunidade</h3>
                                     <form id="form-comunidade">
-                                        <input type="text" id="comunidade-nome" placeholder="Nome" required>
+                                        <input type="text" id="comunidade-nome" placeholder="Nome da Comunidade" required>
                                         <textarea id="comunidade-desc" placeholder="Descrição" required></textarea>
                                         <select id="comunidade-visibilidade" required>
-                                            <option value="publico">Pública</option>
-                                            <option value="privado">Privada</option>
+                                            <option value="publico">Acesso Público</option>
+                                            <option value="privado">Acesso Privado</option>
                                         </select>
-                                        <button type="submit">Criar</button>
+                                        <button type="submit" class="btn-primary">Criar Comunidade</button>
                                     </form>
                                 </div>
                             </div>
 
                             <div class="admin-form-container">
-                                <h3>Criar Projeto (Feed)</h3>
+                                <h3>Criação de Projeto (Feed)</h3>
                                 <form id="form-projeto">
-                                    <input type="text" id="projeto-titulo" placeholder="Nome" required>
+                                    <input type="text" id="projeto-titulo" placeholder="Título do Projeto" required>
                                     <textarea id="projeto-desc" placeholder="Descrição" required></textarea>
-                                    <select id="projeto-id-comunidade-select" required><option value="">Comunidade...</option></select>
+                                    <select id="projeto-id-comunidade-select" required><option value="">Comunidade Pai...</option></select>
                                     <select id="projeto-visibilidade" required>
                                         <option value="publico">Público</option>
                                         <option value="privado">Privado</option>
                                     </select>
-                                    <button type="submit">Criar Projeto</button>
+                                    <button type="submit" class="btn-primary">Criar Projeto</button>
                                 </form>
                             </div>
 
                             <div class="admin-form-container">
                                 <h3>Lista de Conteúdos</h3>
-                                <div id="management-list" class="users-list"></div>
+                                <div id="management-list" class="users-list"><p>Carregando...</p></div>
                             </div>
                         </div>
 
                         <div id="admin-tab-membros" class="tab-content hidden">
-                            <div id="tools-produtor-membros" class="hidden">
-                                <div class="admin-form-container">
-                                    <h3>Configurações de Comunidade</h3>
-                                    <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 10px;">Edite admins ou transfira a propriedade.</p>
-                                    <form id="form-edit-comunidade">
-                                        <select id="edit-com-select" required><option value="">Selecione...</option></select>
-                                        <input type="text" id="edit-com-nome" placeholder="Nome">
-                                        <textarea id="edit-com-desc" placeholder="Descrição"></textarea>
-                                        <select id="edit-com-visibilidade">
-                                            <option value="publico">Pública</option>
-                                            <option value="privado">Privada</option>
-                                        </select>
-                                        <label class="form-label">Administradores (vírgula):</label>
-                                        <textarea id="edit-com-admins"></textarea>
-                                        <label class="form-label">Transferir Propriedade (E-mail):</label>
-                                        <input type="email" id="edit-com-owner">
-                                        <button type="submit" class="btn-warning">Salvar Alterações</button>
-                                    </form>
-                                </div>
+                            <div id="join-requests-container" class="admin-form-container">
+                                <h3>Solicitações de Entrada</h3>
+                                <div id="requests-list" class="users-list"><p>Verificando solicitações...</p></div>
+                            </div>
 
-                                <div class="admin-form-container">
-                                    <h3>Acesso em Lote</h3>
-                                    <form id="form-batch-manage">
-                                        <select id="batch-com-select" required><option value="">Comunidade...</option></select>
-                                        <label class="form-label">Membros:</label>
-                                        <div id="batch-users-list" class="checkbox-list"></div>
-                                        <button type="submit" class="btn-warning">Tornar Administradores</button>
-                                    </form>
-                                </div>
+                            <div class="admin-form-container" style="border: 2px solid var(--primary-color);">
+                                <h3 style="color: var(--primary-color);">Editar Comunidade</h3>
+                                <form id="form-edit-comunidade">
+                                    <select id="edit-com-select" required><option value="">Selecione...</option></select>
+                                    <input type="text" id="edit-com-nome" placeholder="Renomear Comunidade" required>
+                                    <textarea id="edit-com-desc" placeholder="Editar Descrição" required></textarea>
+                                    <select id="edit-com-visibilidade" required>
+                                        <option value="publico">Tornar Pública</option>
+                                        <option value="privado">Tornar Privada</option>
+                                    </select>
+                                    <label class="form-label">Administradores (vírgula):</label>
+                                    <textarea id="edit-com-admins"></textarea>
+                                    <label class="form-label">Transferir Propriedade (E-mail):</label>
+                                    <input type="email" id="edit-com-owner">
+                                    <button type="submit" class="btn-warning">Salvar Alterações Críticas</button>
+                                </form>
+                            </div>
+
+                            <div class="admin-form-container" style="border: 2px solid var(--primary-color);">
+                                <h3 style="color: var(--primary-color);">Gestão em Lote</h3>
+                                <form id="form-batch-manage">
+                                    <select id="batch-com-select" required><option value="">Comunidade...</option></select>
+                                    <label class="form-label">Membros:</label>
+                                    <div id="batch-users-list" class="checkbox-list"></div>
+                                    <button type="submit" class="btn-warning" style="margin-top: 15px;">Tornar Administradores</button>
+                                </form>
                             </div>
                         </div>
 
                         <div id="admin-tab-master" class="tab-content hidden">
                             <div id="master-admin-tools" class="admin-form-container">
-                                <h3>Gerenciamento de Usuários do App</h3>
-                                <input type="text" id="search-user" class="search-input" placeholder="Pesquisar por nome ou e-mail...">
+                                <h3>Gestão Master</h3>
+                                <input type="text" id="search-user" class="search-input" placeholder="Pesquisar usuário...">
                                 <div id="users-list-container" class="users-list"></div>
                             </div>
                         </div>
