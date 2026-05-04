@@ -72,7 +72,7 @@ const projectView = document.getElementById('project-view');
 const adminPanel = document.getElementById('admin-panel');
 const searchResultsView = document.getElementById('search-results-view');
 
-// Lógica de Tabs da Pesquisa
+// TABS de Pesquisa
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -82,7 +82,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     });
 });
 
-// Pesquisa Global
+// Pesquisa
 const searchInput = document.getElementById('global-search-input');
 if(searchInput) {
     searchInput.addEventListener('input', async (e) => {
@@ -124,7 +124,6 @@ if(searchInput) {
                 }
             });
             document.getElementById('search-contas-list').innerHTML = hUsers || '<p class="loading-text">Nenhuma conta encontrada.</p>';
-
         } catch(err) {}
     });
 }
@@ -150,24 +149,48 @@ window.esconderTelas = function() {
     searchResultsView?.classList.add('hidden');
 }
 
-const navSetup = [
-    { id: 'nav-feed', mobId: 'mob-nav-feed', action: () => { window.esconderTelas(); globalFeedView.classList.remove('hidden'); window.updateActiveNav('nav-feed', 'mob-nav-feed'); carregarFeedGlobal(); } },
-    { id: 'nav-comunidades', mobId: 'mob-nav-comunidades', action: () => { window.esconderTelas(); dynamicContent.classList.remove('hidden'); window.updateActiveNav('nav-comunidades', 'mob-nav-comunidades'); carregarVitrineComunidades(); } },
-    { id: 'nav-projetos', mobId: 'mob-nav-projetos', action: () => { window.esconderTelas(); myProjectsView.classList.remove('hidden'); window.updateActiveNav('nav-projetos', 'mob-nav-projetos'); carregarMeusProjetos(); } },
-    { id: 'nav-admin', action: () => { window.esconderTelas(); adminPanel.classList.remove('hidden'); window.updateActiveNav('nav-admin', null); carregarListaGerenciamento(); carregarSolicitacoes(); } }
-];
+// ROTAS DIRETAS (Acessadas via onclick no HTML para garantir o clique sempre)
+window.abrirMeuFeed = (e) => {
+    if(e) e.preventDefault();
+    if(window.innerWidth <= 768) window.closeSidebarMobile();
+    window.esconderTelas();
+    globalFeedView?.classList.remove('hidden');
+    window.updateActiveNav('nav-feed', 'mob-nav-feed');
+    carregarFeedGlobal();
+};
 
-navSetup.forEach(nav => {
-    document.getElementById(nav.id)?.addEventListener('click', (e) => { e.preventDefault(); nav.action(); });
-    document.getElementById(nav.mobId)?.addEventListener('click', (e) => { e.preventDefault(); nav.action(); });
-});
+window.abrirExplorar = (e) => {
+    if(e) e.preventDefault();
+    if(window.innerWidth <= 768) window.closeSidebarMobile();
+    window.esconderTelas();
+    dynamicContent?.classList.remove('hidden');
+    window.updateActiveNav('nav-comunidades', 'mob-nav-comunidades');
+    carregarVitrineComunidades();
+};
+
+window.abrirMeusProjetos = (e) => {
+    if(e) e.preventDefault();
+    if(window.innerWidth <= 768) window.closeSidebarMobile();
+    window.esconderTelas();
+    myProjectsView?.classList.remove('hidden');
+    window.updateActiveNav('nav-projetos', 'mob-nav-projetos');
+    carregarMeusProjetos();
+};
+
+window.abrirPainel = (e) => {
+    if(e) e.preventDefault();
+    if(window.innerWidth <= 768) window.closeSidebarMobile();
+    window.esconderTelas();
+    adminPanel?.classList.remove('hidden');
+    window.updateActiveNav('nav-admin', null);
+    carregarListaGerenciamento();
+    carregarSolicitacoes();
+};
 
 window.goHome = () => { 
     if(auth.currentUser) { 
         if(searchInput) searchInput.value = '';
-        window.esconderTelas(); globalFeedView?.classList.remove('hidden'); 
-        window.updateActiveNav('nav-feed', 'mob-nav-feed'); 
-        carregarFeedGlobal(); 
+        window.abrirMeuFeed();
     } 
 };
 document.getElementById('logo-home-mobile')?.addEventListener('click', window.goHome);
@@ -245,7 +268,6 @@ async function atualizarSidebarComunidades() {
             document.getElementById('sidebar-dynamic-section')?.classList.remove('hidden'); 
             list.innerHTML = html; 
             
-            // Delegação de evento segura para links criados
             list.querySelectorAll('.dyn-sidebar-link').forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
