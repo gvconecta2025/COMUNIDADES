@@ -46,7 +46,6 @@ document.getElementById('mobile-close-sidebar')?.addEventListener('click', windo
 mobileOverlay?.addEventListener('click', window.closeSidebarMobile);
 document.getElementById('sidebar-toggle')?.addEventListener('click', () => { sidebar.classList.toggle('expanded'); sidebar.classList.toggle('collapsed'); });
 
-// Lógica de Sub-Abas do Painel e Pesquisa
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
         const parent = e.target.parentElement;
@@ -63,6 +62,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 window.esconderTelas = () => {
     document.querySelectorAll('.app-view').forEach(v => v.classList.add('hidden'));
     document.getElementById('programmer-intel-panel')?.classList.add('hidden');
+    document.getElementById('fab-add-post')?.classList.add('hidden'); // Oculta FAB por padrão
 }
 
 window.updateActiveNav = (idD, idM) => {
@@ -103,7 +103,6 @@ window.goHome = () => { if(auth.currentUser) window.abrirMeuFeed(); };
 document.getElementById('logo-home-mobile')?.addEventListener('click', window.goHome);
 document.getElementById('logo-home-sidebar')?.addEventListener('click', window.goHome);
 
-// AUTH
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         document.getElementById('logout-btn')?.classList.remove('hidden');
@@ -156,7 +155,6 @@ async function resolverBadgesUsuario() {
     document.getElementById('user-badges').innerHTML = bHTML;
 }
 
-// BUSCA GLOBAL
 const searchInput = document.getElementById('global-search-input');
 const searchResultsView = document.getElementById('search-results-view');
 if(searchInput) {
@@ -217,7 +215,6 @@ document.getElementById('form-register')?.addEventListener('submit', async (e) =
 });
 document.getElementById('logout-btn')?.addEventListener('click', () => { signOut(auth); });
 
-// GESTÃO
 async function carregarListaGerenciamento() {
     const list = document.getElementById('management-list');
     list.innerHTML = '<p class="loading-text">Carregando conteúdos...</p>';
@@ -254,7 +251,7 @@ async function carregarListaGerenciamento() {
 
 window.excluirDocumento = async (colecao, idDoc) => {
     if(confirm("Deseja excluir permanentemente? Isso não pode ser desfeito.")) {
-        try { await deleteDoc(doc(db, colecao, idDoc)); alert("Excluído com sucesso!"); carregarListaGerenciamento(); atualizarSidebarComunidades(); } catch (e) { alert("Erro ao excluir."); }
+        try { await deleteDoc(doc(db, colecao, idDoc)); alert("Excluído com sucesso!"); carregarListaGerenciamento(); atualizarSidebarComunidades(); window.abrirFeedProjeto(currentProjetoId); } catch (e) {}
     }
 };
 
@@ -301,35 +298,61 @@ async function atualizarSidebarComunidades() {
     } catch(e) {}
 }
 
-document.getElementById('form-comunidade')?.addEventListener('submit', async (e) => {
-    e.preventDefault(); const btn = e.target.querySelector('button'); btn.textContent = 'Salvando...'; btn.disabled = true;
+// ----------------------------------------------------
+// SISTEMA DE MODAL DE POSTAGEM (FAB)
+// ----------------------------------------------------
+const postModal = document.getElementById('post-modal-overlay');
+const fabAddPost = document.getElementById('fab-add-post');
+
+fabAddPost?.addEventListener('click', () => {
+    document.getElementById('post-modal-title').textContent = "Nova Postagem";
+    document.getElementById('edit-post-id').value = "";
+    document.getElementById('post-text').value = "";
+    document.getElementById('post-image-url').value = "";
+    document.getElementById('btn-submit-post').textContent = "Publicar";
+    postModal.classList.remove('hidden');
+    document.getElementById('post-text').focus();
+});
+
+document.getElementById('btn-close-post-modal')?.addEventListener('click', () => {
+    postModal.classList.add('hidden');
+});
+
+// Editar Post Existente via Modal
+window.abrirEdicaoPost = (postId) => {
+    const post = projFeedPosts.find(p => p.id === postId);
+    if(post) {
+        document.getElementById('post-modal-title').textContent = "Editar Postagem";
+        document.getElementById('edit-post-id').value = post.id;
+        document.getElementById('post-text').value = post.texto;
+        document.getElementById('post-image-url').value = post.imagem_url || "";
+        document.getElementById('btn-submit-post').textContent = "Salvar Alterações";
+        postModal.classList.remove('hidden');
+    }
+}
+
+document.getElementById('form-post')?.addEventListener('submit', async (e) => {
+    e.preventDefault(); 
+    const texto = document.getElementById('post-text').value; 
+    const imageUrl = document.getElementById('post-image-url').value;
+    const editId = document.getElementById('edit-post-id').value;
+    const btn = document.getElementById('btn-submit-post');
+    btn.textContent = 'Processando...'; btn.disabled = true;
+    
     try {
-        await addDoc(collection(db, "comunidades"), { nome: document.getElementById('comunidade-nome').value, descricao: document.getElementById('comunidade-desc').value, visibilidade: document.getElementById('comunidade-visibilidade').value, id_criador: auth.currentUser.uid, admins_emails: [auth.currentUser.email] });
-        alert(`Comunidade criada!`); e.target.reset(); carregarComunidadesSelects(auth.currentUser.email, currentUserRole); carregarListaGerenciamento(); atualizarSidebarComunidades();
-    } catch (error) {} finally { btn.textContent = 'Criar Comunidade'; btn.disabled = false; }
+        if(editId) {
+            // Edição
+            await updateDoc(doc(db, "postagens", editId), { texto: texto, imagem_url: imageUrl });
+        } else {
+            // Criação
+            await addDoc(collection(db, "postagens"), { id_projeto: currentProjetoId, id_comunidade: currentCommunityId || '', autor_email: auth.currentUser.email, texto: texto, imagem_url: imageUrl, data_hora: new Date().toISOString() });
+        }
+        postModal.classList.add('hidden');
+        window.abrirFeedProjeto(currentProjetoId);
+    } catch (error) { alert("Erro ao salvar postagem."); } 
+    finally { btn.disabled = false; }
 });
 
-document.getElementById('edit-com-select')?.addEventListener('change', async (e) => {
-    if(!e.target.value) { document.getElementById('form-edit-comunidade').reset(); return; }
-    const docSnap = await getDoc(doc(db, "comunidades", e.target.value));
-    if(docSnap.exists()){ const d = docSnap.data(); document.getElementById('edit-com-nome').value = d.nome; document.getElementById('edit-com-desc').value = d.descricao; document.getElementById('edit-com-visibilidade').value = d.visibilidade || 'publico'; document.getElementById('edit-com-admins').value = (d.admins_emails || []).join(', '); document.getElementById('edit-com-owner').value = ''; }
-});
-
-document.getElementById('form-edit-comunidade')?.addEventListener('submit', async (e) => {
-    e.preventDefault(); const comId = document.getElementById('edit-com-select').value;
-    if(!comId) return alert("Selecione."); const btn = e.target.querySelector('button'); btn.textContent = 'Salvando...'; btn.disabled = true;
-    try {
-        let updateData = { nome: document.getElementById('edit-com-nome').value, descricao: document.getElementById('edit-com-desc').value, visibilidade: document.getElementById('edit-com-visibilidade').value, admins_emails: document.getElementById('edit-com-admins').value.split(',').map(em => em.trim()).filter(em => em) };
-        const newOwnerEmail = document.getElementById('edit-com-owner').value.trim();
-        if(newOwnerEmail) { const qUser = query(collection(db, "users"), where("email", "==", newOwnerEmail)); const userSnap = await getDocs(qUser); if(userSnap.empty) alert("O e-mail digitado não existe."); else { updateData.id_criador = userSnap.docs[0].id; alert("Propriedade transferida!"); } }
-        await updateDoc(doc(db, "comunidades", comId), updateData); alert("Atualizada com sucesso!"); e.target.reset(); carregarComunidadesSelects(auth.currentUser.email, currentUserRole); carregarListaGerenciamento(); atualizarSidebarComunidades();
-    } catch (err) {} finally { btn.textContent = 'Salvar Alterações'; btn.disabled = false; }
-});
-
-document.getElementById('form-projeto')?.addEventListener('submit', async (e) => {
-    e.preventDefault(); const btn = e.target.querySelector('button'); btn.textContent = 'Salvando...'; btn.disabled = true;
-    try { await addDoc(collection(db, "projetos"), { titulo: document.getElementById('projeto-titulo').value, descricao: document.getElementById('projeto-desc').value, id_comunidade: document.getElementById('projeto-id-comunidade-select').value, visibilidade: document.getElementById('projeto-visibilidade').value, seguidores: 0, membros: 0, foto_url: "https://via.placeholder.com/150" }); alert("Projeto salvo!"); e.target.reset(); carregarListaGerenciamento(); } catch (error) {} finally { btn.textContent = 'Salvar Projeto'; btn.disabled = false; }
-});
 
 // FEEDS E RENDERIZAÇÃO
 async function carregarFeedGlobal() {
@@ -420,7 +443,9 @@ window.listarProjetosDaComunidade = async (comId, comNome) => {
         const qPosts = query(collection(db, "postagens"), orderBy("data_hora", "desc"), limit(200));
         const snapPosts = await getDocs(qPosts);
         comFeedPosts = [];
-        snapPosts.forEach(doc => { const p = doc.data(); if(projIds.includes(p.id_projeto)) comFeedPosts.push({id: doc.id, nome_projeto: nProj[p.id_projeto], ...p}); });
+        snapPosts.forEach(doc => {
+            const p = doc.data(); if(projIds.includes(p.id_projeto)) comFeedPosts.push({id: doc.id, nome_projeto: nProj[p.id_projeto], ...p});
+        });
 
         if(comFeedPosts.length === 0) { document.getElementById('community-posts-container').innerHTML = '<p class="loading-text">Esta comunidade ainda não tem postagens.</p>'; return; }
         document.getElementById('community-posts-container').innerHTML = ''; renderizarLoteCommunity();
@@ -527,31 +552,49 @@ async function carregarMeusProjetos() {
     } catch(error) {}
 }
 
+window.voltarParaComunidade = () => {
+    if(currentCommunityId) {
+        getDoc(doc(db, "comunidades", currentCommunityId)).then(d => {
+            if(d.exists()) window.listarProjetosDaComunidade(currentCommunityId, d.data().nome);
+            else window.goHome();
+        }).catch(() => window.goHome());
+    } else window.goHome();
+};
+
 window.abrirFeedProjeto = async (projId, targetPostId = null) => {
     window.esconderTelas(); document.getElementById('project-view')?.classList.remove('hidden'); 
     currentProjetoId = projId; currentTargetPostId = targetPostId;
     document.getElementById('posts-feed').innerHTML = '<p class="loading-text">Carregando postagens...</p>';
     document.getElementById('btn-load-more-project')?.classList.add('hidden');
-    projFeedIndex = 0; window.updateActiveNav(null, null); 
+    projFeedIndex = 0;
+    window.updateActiveNav(null, null); 
 
     try {
         const projDoc = await getDoc(doc(db, "projetos", projId));
         if (projDoc.exists()) {
             const data = projDoc.data();
+            
             const isProgramador = currentUserRole === 'programador';
             const isProdutor = currentUserRole === 'produtor'; 
             const isAdmin = currentUserRole === 'admin';
             
             if(data.visibilidade === 'privado' && !isProgramador && !isProdutor && !isAdmin && !currentUserData?.acesso_comunidades?.includes(data.id_comunidade)) {
-                alert("Acesso restrito. Este projeto é privado e você não possui acesso a esta comunidade.");
-                window.goHome(); return;
+                alert("Acesso restrito. Este projeto é privado.");
+                window.goHome();
+                return;
             }
 
             document.getElementById('feed-title').textContent = data.titulo;
-            currentCommunityId = data.id_comunidade;
+            document.getElementById('feed-desc').textContent = data.descricao || '';
+            document.getElementById('feed-photo').src = data.foto_url || "https://via.placeholder.com/150";
 
-            if (currentUserRole !== 'usuario') { document.getElementById('post-creator')?.classList.remove('hidden'); } 
-            else { document.getElementById('post-creator')?.classList.add('hidden'); }
+            currentCommunityId = data.id_comunidade;
+            const comDoc = await getDoc(doc(db, "comunidades", data.id_comunidade));
+            document.getElementById('feed-parent-community').textContent = comDoc.exists() ? `COMUNIDADE: ${comDoc.data().nome}` : 'Comunidade Desconhecida';
+
+            // MOSTRA O BOTÃO FAB SE FOR ADMIN/PRODUTOR
+            if (currentUserRole !== 'usuario') { document.getElementById('fab-add-post')?.classList.remove('hidden'); document.getElementById('btn-edit-photo')?.classList.remove('hidden'); } 
+            else { document.getElementById('fab-add-post')?.classList.add('hidden'); document.getElementById('btn-edit-photo')?.classList.add('hidden'); }
 
             const qPosts = query(collection(db, "postagens"), where("id_projeto", "==", currentProjetoId));
             const snapshot = await getDocs(qPosts); projFeedPosts = []; snapshot.forEach(doc => projFeedPosts.push({id: doc.id, ...doc.data()}));
@@ -572,13 +615,20 @@ function renderLoteProjeto() {
         const dataFormatada = new Date(post.data_hora).toLocaleString('pt-BR');
         const imgHtml = post.imagem_url ? `<img src="${post.imagem_url}" class="post-media">` : '';
         const podeExcluir = (currentUserRole !== 'usuario' || post.autor_email === auth.currentUser?.email);
-        const btnExcluir = podeExcluir ? `<button class="btn-sm btn-delete" onclick="window.excluirDocumento('postagens', '${post.id}')">Excluir</button>` : '';
+        
+        let btnAcoes = '';
+        if(podeExcluir) {
+            btnAcoes = `
+                <button class="btn-sm btn-edit" onclick="window.abrirEdicaoPost('${post.id}')">Editar</button>
+                <button class="btn-sm btn-delete" onclick="window.excluirDocumento('postagens', '${post.id}')">Excluir</button>
+            `;
+        }
 
         pFeed.innerHTML += `
             <div class="post-card" id="post-${post.id}">
                 <div class="post-header">
                     <div class="post-meta"><b>${post.autor_email.split('@')[0]}</b> • ${dataFormatada}</div>
-                    <div class="post-actions">${btnExcluir}</div>
+                    <div class="post-actions" style="display:flex; gap:5px;">${btnAcoes}</div>
                 </div>
                 <div class="post-content">${processarTextoLinks(post.texto)}</div>
                 ${imgHtml}
@@ -607,13 +657,9 @@ function renderLoteProjeto() {
 }
 document.getElementById('btn-load-more-project')?.addEventListener('click', renderLoteProjeto);
 
-document.getElementById('form-post')?.addEventListener('submit', async (e) => {
-    e.preventDefault(); const texto = document.getElementById('post-text').value; const imageUrl = document.getElementById('post-image-url').value;
-    const btn = e.target.querySelector('button'); btn.textContent = 'Postando...'; btn.disabled = true;
-    try {
-        await addDoc(collection(db, "postagens"), { id_projeto: currentProjetoId, id_comunidade: currentCommunityId || '', autor_email: auth.currentUser.email, texto: texto, imagem_url: imageUrl, data_hora: new Date().toISOString() });
-        e.target.reset(); window.abrirFeedProjeto(currentProjetoId);
-    } catch (error) {} finally { btn.textContent = 'Publicar'; btn.disabled = false; }
+document.getElementById('btn-edit-photo')?.addEventListener('click', async () => {
+    const url = prompt("URL da nova foto:");
+    if (url && currentProjetoId) { try { await updateDoc(doc(db, "projetos", currentProjetoId), { foto_url: url }); document.getElementById('feed-photo').src = url; } catch (error) {} }
 });
 
 window.enviarComentario = async (e, postId) => {
@@ -650,13 +696,16 @@ function processarTextoLinks(texto) {
     });
 }
 
+// BATCH E CONTROLE DE PAINEL MANTIDOS DA VERSÃO ANTERIOR...
 document.getElementById('batch-com-select')?.addEventListener('change', async (e) => {
-    const comId = e.target.value; const uList = document.getElementById('batch-users-list'); 
-    if(!comId) { uList.innerHTML = 'Selecione...'; return; }
-    uList.innerHTML = 'Buscando...'; 
+    const comId = e.target.value; const uList = document.getElementById('batch-users-list'); const pList = document.getElementById('batch-projects-list');
+    if(!comId) { uList.innerHTML = 'Selecione...'; pList.innerHTML = 'Selecione...'; return; }
+    uList.innerHTML = 'Buscando...'; pList.innerHTML = 'Buscando...';
     try {
         const qUsers = query(collection(db, "users"), where("acesso_comunidades", "array-contains", comId)); const snapUsers = await getDocs(qUsers); let uHtml = '';
         snapUsers.forEach(u => uHtml += `<label class="checkbox-item"><input type="checkbox" value="${u.data().email}"> ${u.data().nome || u.data().email}</label>`); uList.innerHTML = uHtml || '<p>Nenhum membro.</p>';
+        const qProj = query(collection(db, "projetos"), where("id_comunidade", "==", comId)); const snapProj = await getDocs(qProj); let pHtml = '';
+        snapProj.forEach(p => pHtml += `<label class="checkbox-item"><input type="checkbox" value="${p.id}" checked> ${p.data().titulo}</label>`); pList.innerHTML = pHtml || '<p>Nenhum projeto.</p>';
     } catch(err) { uList.innerHTML = 'Erro.'; }
 });
 
@@ -667,8 +716,38 @@ document.getElementById('form-batch-manage')?.addEventListener('submit', async (
     const btn = e.target.querySelector('button'); btn.textContent = 'Aplicando...'; btn.disabled = true;
     try {
         const comRef = doc(db, "comunidades", comId); await updateDoc(comRef, { admins_emails: arrayUnion(...usersChecked) });
-        alert(`Sucesso! Administradores adicionados.`); e.target.reset(); document.getElementById('batch-users-list').innerHTML = ''; 
+        alert(`Sucesso! Administradores adicionados.`); e.target.reset(); document.getElementById('batch-users-list').innerHTML = ''; document.getElementById('batch-projects-list').innerHTML = '';
     } catch (err) {} finally { btn.textContent = 'Conceder Acesso Administrativo'; btn.disabled = false; }
+});
+
+document.getElementById('form-comunidade')?.addEventListener('submit', async (e) => {
+    e.preventDefault(); const btn = e.target.querySelector('button'); btn.textContent = 'Salvando...'; btn.disabled = true;
+    try {
+        await addDoc(collection(db, "comunidades"), { nome: document.getElementById('comunidade-nome').value, descricao: document.getElementById('comunidade-desc').value, visibilidade: document.getElementById('comunidade-visibilidade').value, id_criador: auth.currentUser.uid, admins_emails: [auth.currentUser.email] });
+        alert(`Comunidade criada!`); e.target.reset(); carregarComunidadesSelects(auth.currentUser.email, currentUserRole); carregarListaGerenciamento(); atualizarSidebarComunidades();
+    } catch (error) {} finally { btn.textContent = 'Criar Comunidade'; btn.disabled = false; }
+});
+
+document.getElementById('edit-com-select')?.addEventListener('change', async (e) => {
+    if(!e.target.value) { document.getElementById('form-edit-comunidade').reset(); return; }
+    const docSnap = await getDoc(doc(db, "comunidades", e.target.value));
+    if(docSnap.exists()){ const d = docSnap.data(); document.getElementById('edit-com-nome').value = d.nome; document.getElementById('edit-com-desc').value = d.descricao; document.getElementById('edit-com-visibilidade').value = d.visibilidade || 'publico'; document.getElementById('edit-com-admins').value = (d.admins_emails || []).join(', '); document.getElementById('edit-com-owner').value = ''; }
+});
+
+document.getElementById('form-edit-comunidade')?.addEventListener('submit', async (e) => {
+    e.preventDefault(); const comId = document.getElementById('edit-com-select').value;
+    if(!comId) return alert("Selecione."); const btn = e.target.querySelector('button'); btn.textContent = 'Salvando...'; btn.disabled = true;
+    try {
+        let updateData = { nome: document.getElementById('edit-com-nome').value, descricao: document.getElementById('edit-com-desc').value, visibilidade: document.getElementById('edit-com-visibilidade').value, admins_emails: document.getElementById('edit-com-admins').value.split(',').map(em => em.trim()).filter(em => em) };
+        const newOwnerEmail = document.getElementById('edit-com-owner').value.trim();
+        if(newOwnerEmail) { const qUser = query(collection(db, "users"), where("email", "==", newOwnerEmail)); const userSnap = await getDocs(qUser); if(userSnap.empty) alert("O e-mail digitado não existe."); else { updateData.id_criador = userSnap.docs[0].id; alert("Propriedade transferida!"); } }
+        await updateDoc(doc(db, "comunidades", comId), updateData); alert("Atualizada com sucesso!"); e.target.reset(); carregarComunidadesSelects(auth.currentUser.email, currentUserRole); carregarListaGerenciamento(); atualizarSidebarComunidades();
+    } catch (err) {} finally { btn.textContent = 'Salvar Alterações'; btn.disabled = false; }
+});
+
+document.getElementById('form-projeto')?.addEventListener('submit', async (e) => {
+    e.preventDefault(); const btn = e.target.querySelector('button'); btn.textContent = 'Salvando...'; btn.disabled = true;
+    try { await addDoc(collection(db, "projetos"), { titulo: document.getElementById('projeto-titulo').value, descricao: document.getElementById('projeto-desc').value, id_comunidade: document.getElementById('projeto-id-comunidade-select').value, visibilidade: document.getElementById('projeto-visibilidade').value, seguidores: 0, membros: 0, foto_url: "https://via.placeholder.com/150" }); alert("Projeto salvo!"); e.target.reset(); carregarListaGerenciamento(); } catch (error) {} finally { btn.textContent = 'Salvar Projeto'; btn.disabled = false; }
 });
 
 async function carregarSolicitacoes() {
