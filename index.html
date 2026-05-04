@@ -13,10 +13,8 @@
 
     <div id="crm-layout">
         
-        <!-- PELÍCULA ESCURA PARA O MENU MOBILE -->
         <div id="mobile-overlay" class="mobile-only hidden"></div>
 
-        <!-- BARRA LATERAL (Sem o bloqueio desktop-only) -->
         <aside id="sidebar" class="expanded">
             <div class="sidebar-header">
                 <h2 class="sidebar-logo" id="logo-home-sidebar" style="cursor: pointer;"><span class="icon">🚀</span><span class="text">Plataforma</span></h2>
@@ -89,7 +87,7 @@
                     </div>
 
                     <div id="search-results-view" class="hidden app-view">
-                        <button onclick="goHome()" class="btn-secondary" style="margin-bottom: 15px; padding: 5px 15px; font-size: 0.85rem;">⬅ Voltar para o Feed</button>
+                        <button onclick="window.goHome()" class="btn-secondary" style="margin-bottom: 15px; padding: 5px 15px; font-size: 0.85rem;">⬅ Voltar para o Feed</button>
                         <h2 class="page-title">Resultados da Pesquisa</h2>
                         <div class="tabs-container">
                             <button class="tab-btn active" data-target="search-tab-comunidades">Comunidades</button>
@@ -117,7 +115,7 @@
                     </div>
 
                     <div id="community-view" class="hidden app-view">
-                        <button onclick="goHome()" class="btn-secondary" style="margin-bottom: 15px; padding: 5px 15px; font-size: 0.85rem;">⬅ Voltar para Início</button>
+                        <button onclick="window.goHome()" class="btn-secondary" style="margin-bottom: 15px; padding: 5px 15px; font-size: 0.85rem;">⬅ Voltar para Início</button>
                         <div class="feed-header" style="flex-direction: column; align-items: flex-start; gap: 10px; padding: 1.5rem;">
                             <div>
                                 <h2 id="com-view-title" style="font-size: 1.6rem; font-weight: 800; color: var(--primary-color);">Carregando...</h2>
@@ -145,7 +143,7 @@
                     </div>
 
                     <div id="project-view" class="hidden app-view">
-                        <button onclick="voltarParaComunidade()" class="btn-secondary" style="margin-bottom: 15px; padding: 5px 15px; font-size: 0.85rem;">⬅ Voltar para a Comunidade</button>
+                        <button onclick="window.voltarParaComunidade()" class="btn-secondary" style="margin-bottom: 15px; padding: 5px 15px; font-size: 0.85rem;">⬅ Voltar para a Comunidade</button>
                         <div class="feed-header">
                             <div class="feed-photo-container">
                                 <img src="https://via.placeholder.com/150" id="feed-photo" class="circular-photo" alt="Foto">
